@@ -1,134 +1,124 @@
-read_fm_data <- function(file){
-  #' @description read structural data exported from fieldmap (.xlsx)
+read_structural_data <- function(file){
+  #' @description read structural data from rewritten forms (.xlsx)
   #' @param file path to the .xlsx file
   
   data.list <- list()
   
   # plot
   
-  data.list$plot <- read.xlsx(file, sheet = "Plots", detectDates = T) %>%
-    filter(!is.na(Date)) %>%
-    select(pid = ID, Date, Plotid, plotsize = Area_m2, Slope, Aspect, Landform, Hillform) %>%
-    mutate(pid = as.numeric(pid),
-           Date = as.numeric(substr(as.character(Date), 1, 4)),
-           Plotid = as.character(Plotid),
-           plotsize = as.numeric(plotsize),
-           Slope = as.numeric(Slope),
-           Aspect = as.numeric(Aspect),
-           Landform = as.numeric(Landform),
-           Hillform = as.numeric(Hillform))
-             
-  names(data.list$plot) <- tolower(names(data.list$plot))
+  data.list$plot <- read.xlsx(file, sheet = "plot")
   
-  # tms
-
-  data.list$tms <- read.xlsx(file, sheet = "Plots", detectDates = T) %>%
-    select(pid = ID, Plotid, Date) %>%
-    right_join(., read.xlsx(file, sheet = "TMS"), by = c("pid" = "IDPlots")) %>%
-    select(pid, Plotid, Date, Soil_Old_ID, Soil_New_ID, Distance_m, 
-           Azimuth, Air_Old_ID, Air_New_ID, TreeNumber, Note) %>%
-    mutate(pid = as.numeric(pid),
-           Plotid = as.character(Plotid),
-           Date = as.character(Date),
-           Soil_Old_ID = as.numeric(Soil_Old_ID),
-           Soil_New_ID = as.numeric(Soil_New_ID),
-           Distance_m = as.numeric(Distance_m),
-           Azimuth = as.numeric(Azimuth),
-           Air_Old_ID = as.numeric(Air_Old_ID),
-           Air_New_ID = as.numeric(Air_New_ID),
-           TreeNumber = as.numeric(TreeNumber),
-           Note = as.character(Note),
-           FM = substr(file, nchar(file) - 21, nchar(file) - 5))
+  if(!identical(c("date", "plotid", "census",	"country", "location", "stand",
+                  "plot",	"subplot", "lng", "lat", "plotsize", "dbh_min", "plottype",
+                  "foresttype", "slope", "aspect", "landform", "hillform", "ownership"), 
+                names(data.list$plot))) 
+    
+    stop("Plot data do not match with required table format.")
+  
+  data.list$plot <- data.list$plot %>%
+    mutate(date = as.numeric(date),
+           plotid = as.character(plotid),
+           census = as.numeric(census),
+           country = as.character(country),
+           location = as.character(location),
+           stand = as.character(stand),
+           plot = as.character(plot),
+           subplot = as.numeric(subplot),
+           lng = as.numeric(lng),
+           lat = as.numeric(lat),
+           plotsize = as.numeric(plotsize),
+           dbh_min = as.numeric(dbh_min),
+           plottype = as.numeric(plottype),
+           foresttype = as.character(foresttype),
+           slope = as.numeric(slope),
+           aspect = as.numeric(aspect),
+           landform = as.numeric(landform),
+           hillform = as.numeric(hillform),
+           ownership = as.numeric(ownership))
   
   # tree
   
-  pid <- data.list$plot %>% pull(pid)
-    
-  sp <- read.xlsx(file, sheet = "lookup_species") %>% select(Species = ID, species = VALUE1)
+  data.list$tree <- read.xlsx(file, sheet = "tree")
   
-  data.list$tree <- read.xlsx(file, sheet = "Trees") %>%
-    filter(IDPlots %in% pid & !is.na(Measured)) %>%
-    left_join(., sp, by = "Species") %>%
-    select(pid = IDPlots, tid = ID, x_m, y_m, Status, Growth, Layer, species, 
-           DBH_mm, Height_m, crownht_m = CrownHeight_m, CrownDiam1_m, CrownDiam2_m,
-           decayht = DecayHeight, decay_wood = DecayWood, Decay, Forked) %>%
-    mutate(pid = as.numeric(pid),
-           tid = as.numeric(tid),
+  if(!identical(c("date", "plotid", "treen", "stem", "treetype", "x_m",	"y_m",
+                  "status", "growth", "layer", "species", "dbh_mm", "height_m",
+                  "crownht_m", "crowndiam1_m", "crowndiam2_m", "decay", 
+                  "decay_wood", "decayht"),
+                names(data.list$tree)))
+    
+    stop("Tree data do not match with required table format.")
+  
+  data.list$tree <- data.list$tree %>%
+    mutate(date = as.numeric(date),
+           plotid = as.character(plotid),
+           treen = as.character(treen),
+           stem = as.character(stem),
+           treetype = as.character(treetype),
            x_m = as.numeric(x_m),
            y_m = as.numeric(y_m),
-           Status = as.numeric(Status),
-           Growth = as.numeric(Growth),
-           Layer = as.numeric(Layer),
+           status = as.numeric(status),
+           growth = as.numeric(growth),
+           layer = as.numeric(layer),
            species = as.character(species),
-           DBH_mm = as.numeric(DBH_mm),
-           Height_m = as.numeric(Height_m),
+           dbh_mm = as.numeric(dbh_mm),
+           height_m = as.numeric(height_m),
            crownht_m = as.numeric(crownht_m),
-           CrownDiam1_m = as.numeric(CrownDiam1_m),
-           CrownDiam2_m = as.numeric(CrownDiam2_m),
-           decayht = as.numeric(decayht),
+           crowndiam1_m = as.numeric(crowndiam1_m),
+           crowndiam2_m = as.numeric(crowndiam2_m),
+           decay = as.numeric(decay),
            decay_wood = as.numeric(decay_wood),
-           Decay = as.numeric(Decay),
-           Forked = as.numeric(Forked))
-  
-  names(data.list$tree) <- tolower(names(data.list$tree))
-   
-  # mortality
-  
-  data.list$mortality <- read.xlsx(file, sheet = "Mortality") %>%
-    select(pid = IDPlots, tid = IDTrees, mort_agent = Agent) %>%
-    mutate(pid = as.numeric(pid), 
-           tid = as.numeric(tid), 
-           mort_agent = as.numeric(mort_agent))
+           decayht = as.numeric(decayht))
   
   # microsites
   
-  data.list$microsites <- read.xlsx(file, sheet = "Microsites") %>%
-    select(pid = IDPlots, tid = IDTrees, Microsite, Count) %>%
-    mutate(pid = as.numeric(pid),
-           tid = as.numeric(tid),
-           Microsite = as.numeric(Microsite),
-           Count = as.numeric(Count))
-
-  names(data.list$microsites) <- tolower(names(data.list$microsites))
+  data.list$microsites <- read.xlsx(file, sheet = "microsites")
   
-  # regref
+  if(!identical(c("date", "plotid", "treen", "stem", "microsite", "count"),
+                names(data.list$microsites)))
+    
+    stop("Microsites data do not match with required table format.")
   
-  data.list$regref <- read.xlsx(file, sheet = "RegRefPoints") %>%
-    filter(IDPlots %in% pid) %>% 
-    select(pid = IDPlots, subplot_n = ID, x_m, y_m)
-  
-  # output
-  
-  data.list$plot <- data.list$plot %>% inner_join(., data.list$tree %>% distinct(., pid), by = "pid")
-  
-  data.list$tree <- data.list$tree %>% inner_join(., data.list$plot %>% select(pid, date, plotid), by = "pid") %>%
-    mutate(treen = as.character(tid),
+  data.list$microsites <- data.list$microsites %>%
+    mutate(date = as.numeric(date),
+           plotid = as.character(plotid),
+           treen = as.character(treen),
            treen = case_when(
              nchar(treen) == 1 ~ paste0("00", treen),
              nchar(treen) == 2 ~ paste0("0", treen),
              nchar(treen) == 3 ~ treen),
-           treeid = paste(plotid, treen, sep = "_"))
+           stem = as.character(stem),
+           treeid = paste(plotid, treen, stem, sep = "_"),
+           microsite = as.numeric(microsite),
+           count = as.numeric(count)) %>%
+    select(date, treeid, microsite, count)
   
-  data.list$mortality <- data.list$mortality %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
+  # mortality
   
-  data.list$microsites <- data.list$microsites %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
+  data.list$mortality <- read.xlsx(file, sheet = "mortality")
   
-  data.list$regref <- data.list$regref %>% inner_join(., data.list$plot %>% select(pid, date, plotid), by = "pid")
+  if(!identical(c("date", "plotid", "treen", "stem", "mort_agent"),
+                names(data.list$mortality)))
+    
+    stop("Mortality data do not match with required table format.")
   
-  return(data.list)
-}
-
-read_fr_data <- function(file){
-  #' @description read structural data from rewritten forms (.xlsx)
-  #' @param file path to the .xlsx file
-  
-  data.list <- list()
+  data.list$mortality <- data.list$mortality %>%
+    mutate(date = as.numeric(date),
+           plotid = as.character(plotid),
+           treen = as.character(treen),
+           treen = case_when(
+             nchar(treen) == 1 ~ paste0("00", treen),
+             nchar(treen) == 2 ~ paste0("0", treen),
+             nchar(treen) == 3 ~ treen),
+           stem = as.character(stem),
+           treeid = paste(plotid, treen, stem, sep = "_"),
+           mort_agent = as.numeric(mort_agent)) %>%
+    select(date, treeid, mort_agent)
   
   # deadwood
   
   data.list$deadwood <- read.xlsx(file, sheet = "deadwood")
   
-  if(!identical(c("date", "plotid", "transect",	"species", "dbh_mm", "decay"),
+  if(!identical(c("date", "plotid", "transect",	"transect_length_m", "species", "dbh_mm", "decay"),
                 names(data.list$deadwood)))
     
     stop("Deadwood data do not match with required table format.")
@@ -137,26 +127,28 @@ read_fr_data <- function(file){
     mutate(date = as.numeric(date),
            plotid = as.character(plotid),
            transect = as.numeric(transect),
+           transect_length_m = as.numeric(transect_length_m),
            species = as.character(species),
            dbh_mm = as.numeric(dbh_mm),
            decay = as.numeric(decay))
   
   # regeneration
   
-  # data.list$regeneration <- read.xlsx(file, sheet = "regeneration")
-  # 
-  # if(!identical(c("date", "plotid", "species", "htclass", "regeneratedon", "count"),
-  #               names(data.list$regeneration)))
-  #   
-  #   stop("Regeneration data do not match with required table format.")
-  # 
-  # data.list$regeneration <- data.list$regeneration %>%
-  #   mutate(date = as.numeric(date),
-  #          plotid = as.character(plotid),
-  #          species = as.character(species),
-  #          htclass = as.numeric(htclass),
-  #          regeneratedon = as.numeric(regeneratedon),
-  #          count = as.numeric(count))
+  data.list$regeneration <- read.xlsx(file, sheet = "regeneration")
+
+  if(!identical(c("date", "plotid", "species", "htclass", "browsing", "regeneratedon", "count"),
+                names(data.list$regeneration)))
+
+    stop("Regeneration data do not match with required table format.")
+
+  data.list$regeneration <- data.list$regeneration %>%
+    select(-browsing) %>%
+    mutate(date = as.numeric(date),
+           plotid = as.character(plotid),
+           species = as.character(species),
+           htclass = as.numeric(htclass),
+           regeneratedon = as.numeric(regeneratedon),
+           count = as.numeric(count))
   
   # regeneration_subplot
   
@@ -224,9 +216,9 @@ read_fr_data <- function(file){
   #           biotope_quality = as.numeric(biotope_quality),
   #           biotope_trend = as.numeric(biotope_trend),
   #           large_herbivore_feces = as.numeric(large_herbivore_feces))
-
+  
   # habitat
-   
+  
   # data.list$habitat <- read.xlsx(file, sheet = "habitat", detectDates = T)
   # 
   # if(!identical(c("date", "sampling_date", "plotid",	"animal_species", "gender", "habitat_sign_type"), 
@@ -241,26 +233,28 @@ read_fr_data <- function(file){
   #          animal_species = as.character(animal_species),
   #          gender = as.numeric(gender),
   #          habitat_sign_type = as.numeric(habitat_sign_type))
-            
+  
   return(data.list)
 }
 
-check_structural_data <- function(data, fk){
+check_structural_data <- function(data, fk) {
   #' @description check structural data for possible errors
   #' @param data list of structural datasets (data.raw)
   #' @param fk list of fk encodings extracted from database
   
   error.list <- list()
-
+  
   plot.check <- tbl(KELuser, "plot") %>% 
     filter(id %in% old.plot.id) %>%
-    select(plotid, date_old = date, plotsize_old = plotsize) %>%
+    select(plotid, date_old = date, country_old = country, location_old = location,
+           stand_old = stand, lng_old = lng, lat_old = lat, plotsize_old = plotsize,
+           dbh_min_old = dbh_min, plottype_old = plottype, foresttype_old = foresttype) %>%
     collect() %>%
     right_join(., data$plot, by = "plotid")
   
   tree.check <- tbl(KELuser, "tree") %>%
     filter(plot_id %in% old.plot.id) %>%
-    select(treeid, status_old = status) %>%
+    select(treeid, status_old = status, dbh_old = dbh_mm) %>%
     collect() %>%
     right_join(., data$tree, by = "treeid")
   
@@ -268,48 +262,74 @@ check_structural_data <- function(data, fk){
   
   error.list$P_date <- plot.check %>% filter(is.na(date) | !date > date_old)
   error.list$P_plotid <- anti_join(data$plot, tbl(KELuser, "plot") %>% distinct(., plotid) %>% collect(), by = "plotid")
-  error.list$P_plotsize <- data$plot %>% filter(!plotsize %in% c(500, 1000, 1500)) 
+  error.list$P_census <- data$plot %>% filter(!census %in% fk$plot_census_fk)
+  error.list$P_country <- data$plot %>% filter(!country %in% fk$country_fk)
+  error.list$P_country_change <- plot.check %>% rowwise() %>% filter(!country %in% country_old)
+  error.list$P_location <- data$plot %>% filter(!location %in% fk$location_fk)
+  error.list$P_location_change <- plot.check %>% rowwise() %>% filter(!location %in% location_old)
+  error.list$P_stand <- plot.check %>% rowwise() %>% filter(!stand %in% stand_old)
+  error.list$P_lng <- plot.check %>% rowwise() %>% filter(!lng %in% lng_old)
+  error.list$P_lat <- plot.check %>% rowwise() %>% filter(!lat %in% lat_old)
+  error.list$P_plotsize <- data$plot %>% filter(!plotsize %in% c(500, 1000, 1500))
   error.list$P_plotsize_change <- plot.check %>% rowwise() %>% filter(!plotsize %in% plotsize_old)
+  error.list$P_dbh_min <- data$plot %>% filter(!dbh_min %in% c(50, 60, 100))
+  error.list$P_dbh_min_change <- plot.check %>% rowwise() %>% filter(!dbh_min %in% dbh_min_old)
+  error.list$P_plottype <- data$plot %>% filter(!plottype %in% fk$plottype_fk)
+  error.list$P_plottype_change <- plot.check %>% rowwise() %>% filter(!plottype %in% plottype_old)
+  error.list$P_foresttype <- data$plot %>% filter(!foresttype %in% fk$foresttype_fk)
+  error.list$P_foresttype_change <- plot.check %>% rowwise() %>% filter(!foresttype %in% foresttype_old)
   error.list$P_slope <- data$plot %>% filter(!slope %in% c(0:90))
   error.list$P_aspect <- data$plot %>% filter(!aspect %in% c(0:360))
   error.list$P_landform <- data$plot %>% filter(!landform %in% c(1:5))
   error.list$P_hillform <- data$plot %>% filter(!hillform %in% c(1:3))
+  error.list$P_ownership <- anti_join(data$plot, tbl(KELuser, "person") %>% distinct(., id) %>% collect(), by = c("ownership" = "id"))
   error.list$P_duplicates <- as_tibble(duplicated(data$plot)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
     inner_join(., data$plot %>% rownames_to_column("id"), by = "id")
   error.list$P_ak <- data$plot %>% group_by(date, plotid) %>% filter(n() > 1)
   
   # tree
   
+  error.list$T_not_in_plot <- anti_join(data$tree, data$plot, by = c("date", "plotid"))
+  error.list$T_treetype <- data$tree %>% filter(!treetype %in% fk$treetype_fk)
   error.list$T_status <- data$tree %>% filter(!status %in% fk$status_fk)
-  error.list$T_growth <- data$tree %>% filter(!growth %in% fk$growth_fk & !is.na(growth))
-  error.list$T_growth_dead <- data$tree %>% filter(!status %in% c(1:4) & !is.na(growth))
-  error.list$T_layer <- data$tree %>% filter(!layer %in% fk$layer_fk & !is.na(layer))
-  error.list$T_layer_dead <- data$tree %>% filter(!status %in% c(1:4) & !is.na(layer))
+  error.list$T_growth <- data$tree %>% filter(!growth %in% fk$growth_fk)
+  error.list$T_growth_alive <- data$tree %>% filter(status %in% c(1:4) & growth %in% -1)
+  error.list$T_growth_dead <- data$tree %>% filter(!status %in% c(1:4) & !growth %in% -1)
+  error.list$T_layer <- data$tree %>% filter(!layer %in% fk$layer_fk)
+  error.list$T_layer_alive <- data$tree %>% filter(status %in% c(1:4) & layer %in% -1)
+  error.list$T_layer_dead <- data$tree %>% filter(!status %in% c(1:4) & !layer %in% -1)
   error.list$T_species <- data$tree %>% filter(!species %in% fk$species_fk)
+  error.list$T_dbh <- data$tree %>% filter(dbh_mm < unique(data$plot$dbh_min))
+  error.list$T_dbh_alive <- tree.check %>% filter(status %in% c(1:4) & dbh_mm < dbh_old) 
+  error.list$T_dbh_dead <- tree.check %>% filter(!status %in% c(1:4) & !status_old %in% c(1:4) & dbh_mm > dbh_old)
   error.list$T_height <- data$tree %>% filter(crownht_m >= height_m)
   error.list$T_decayht_height <- data$tree %>% filter(!status %in% c(1:4) & !is.na(height_m))
-  error.list$T_decayht <- data$tree %>% filter(!decayht %in% fk$decayheight_fk & !is.na(decayht))
-  error.list$T_decayht_alive <- data$tree %>% filter(status %in% c(1:4) & !is.na(decayht))
+  error.list$T_decayht <- data$tree %>% filter(!decayht %in% fk$decayheight_fk)
+  error.list$T_decayht_alive <- data$tree %>% filter(status %in% c(1:4) & !decayht %in% -1)
+  error.list$T_decayht_dead <- data$tree %>% filter(!status %in% c(1:4) & decayht %in% -1)
   error.list$T_decayht_stump <- data$tree %>% filter(status %in% c(0, 10) & !decayht %in% 0)
   error.list$T_decayht_decay <- data$tree %>% filter(decay %in% 5 & !decayht %in% 0)
-  error.list$T_decay_wood <- data$tree %>% filter(!decay_wood %in% fk$decay_wood_fk & !is.na(decay_wood))
-  error.list$T_decay_wood_alive <- data$tree %>% filter(status %in% c(1:4) & !is.na(decay_wood))
-  error.list$T_decay <- data$tree %>% filter(!decay %in% fk$decay_fk & !is.na(decay))
-  error.list$T_decay_alive <- data$tree %>% filter(status %in% c(1:4) & !is.na(decay))
+  error.list$T_decay_wood <- data$tree %>% filter(!decay_wood %in% fk$decay_wood_fk)
+  error.list$T_decay_wood_alive <- data$tree %>% filter(status %in% c(1:4) & !decay_wood %in% -1)
+  error.list$T_decay_wood_dead <- data$tree %>% filter(!status %in% c(1:4) & decay_wood %in% -1)
+  error.list$T_decay <- data$tree %>% filter(!decay %in% fk$decay_fk)
+  error.list$T_decay_alive <- data$tree %>% filter(status %in% c(1:4) & !decay %in% -1)
+  error.list$T_decay_dead <- data$tree %>% filter(!status %in% c(1:4) & decay %in% -1)
   error.list$T_decay_stump <- data$tree %>% filter(status %in% c(0, 10) & !decay %in% 5)
-  error.list$T_forked <- data$tree %>% filter(!forked %in% c(0, 1))
   error.list$T_duplicates <- as_tibble(duplicated(data$tree)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
     inner_join(., data$tree %>% rownames_to_column("id"), by = "id")
   error.list$T_ak <- data$tree %>% group_by(date, plotid, treeid) %>% filter(n() > 1)
-
+  
   # mortality
   
   error.list$Mo_not_in_tree <- anti_join(data$mortality, data$tree, by = c("date", "treeid"))
-  error.list$Mo_alive <- data$tree %>% filter(status %in% c(1:4)) %>% inner_join(., data$mortality, by = c("pid", "tid", "date","treeid"))
-  error.list$Mo_dead <- tree.check %>% filter(!status %in% c(1:4) & !status_old %in% c(1:4)) %>% inner_join(., data$mortality, by = c("pid", "tid", "date","treeid"))
+  error.list$Mo_NA <- left_join(tree.check, data$mortality, by = c("date", "treeid")) %>%
+    filter(status_old %in% c(1:4) & !status %in% c(1:4) & is.na(mort_agent))
+  error.list$Mo_alive <- data$tree %>% filter(status %in% c(1:4)) %>% inner_join(., data$mortality, by = c("date", "treeid"))
+  error.list$Mo_dead <- tree.check %>% filter(!status %in% c(1:4) & !status_old %in% c(1:4)) %>% inner_join(., data$mortality, by = c("date", "treeid"))
   error.list$Mo_mort_agent <- data$mortality %>% filter(!mort_agent %in% fk$mort_agent_fk)
   error.list$Mo_0_51 <- data$mortality %>% filter(mort_agent %in% c(0, 51)) %>%
-    mutate(plotid = substr(treeid, 1, nchar(treeid) - 4)) %>%
+    mutate(plotid = substr(treeid, 1, nchar(treeid) - 6)) %>%
     group_by(plotid, mort_agent) %>%
     filter((mort_agent %in% 0 & n() > 2) | (mort_agent %in% 51 & n() < 3))
   error.list$Mo_duplicates <- as_tibble(duplicated(data$mortality)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
@@ -320,8 +340,8 @@ check_structural_data <- function(data, fk){
   
   error.list$Mi_not_in_tree <- anti_join(data$microsites, data$tree, by = c("date", "treeid"))
   error.list$Mi_microsite <- data$microsites %>% filter(!microsite %in% fk$microsite_fk)
-  error.list$Mi_count <- data$microsites %>% filter(count < 1)
-  error.list$Mi_countable <- data$microsites %>% filter(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47) & !is.na(count))
+  error.list$Mi_count <- data$microsites %>% filter(is.na(count) | count < 1)
+  error.list$Mi_countable <- data$microsites %>% filter(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47) & count > 1)
   error.list$Mi_duplicates <- as_tibble(duplicated(data$microsites)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
     inner_join(., data$microsites %>% rownames_to_column("id"), by = "id")
   error.list$Mi_ak <- data$microsites %>% group_by(date, treeid, microsite) %>% filter(n() > 1)
@@ -333,7 +353,7 @@ check_structural_data <- function(data, fk){
   error.list$D_transect_length <- data$deadwood %>% filter(!transect_length_m %in% 20)
   error.list$D_species <- data$deadwood %>% filter(!species %in% fk$species_fk)
   error.list$D_dbh_mm <- data$deadwood %>% filter(is.na(dbh_mm))
-  error.list$D_dbh_min <- data$deadwood %>% filter(dbh_mm < 60)
+  error.list$D_dbh_min <- data$deadwood %>% filter(dbh_mm < 50)
   error.list$D_decay <- data$deadwood %>% filter(!decay %in% fk$decay_wood_fk)
   error.list$D_duplicates <- as_tibble(duplicated(data$deadwood)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
     inner_join(., data$deadwood %>% rownames_to_column("id"), by = "id")
@@ -341,14 +361,14 @@ check_structural_data <- function(data, fk){
   
   # regeneration
   
-  # error.list$R_not_in_plot <- anti_join(data$regeneration, data$plot, by = c("date", "plotid"))
-  # error.list$R_species <- data$regeneration %>% filter(!species %in% fk$species_fk)
-  # error.list$R_htclass <- data$regeneration %>% filter(!htclass %in% fk$htclass_fk)
-  # error.list$R_regeneratedon <- data$regeneration %>% filter(!regeneratedon %in% fk$regeneratedon_fk)
-  # error.list$R_count <- data$regeneration %>% filter(is.na(count) | count < 1)
-  # error.list$R_duplicates <- as_tibble(duplicated(data$regeneration)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
-  #   inner_join(., data$regeneration %>% rownames_to_column("id"), by = "id")
-  # error.list$R_ak <- data$regeneration %>% group_by(date, plotid, species, htclass, regeneratedon) %>% filter(n() > 1)
+  error.list$R_not_in_plot <- anti_join(data$regeneration, data$plot, by = c("date", "plotid"))
+  error.list$R_species <- data$regeneration %>% filter(!species %in% fk$species_fk)
+  error.list$R_htclass <- data$regeneration %>% filter(!htclass %in% fk$htclass_fk)
+  error.list$R_regeneratedon <- data$regeneration %>% filter(!regeneratedon %in% fk$regeneratedon_fk)
+  error.list$R_count <- data$regeneration %>% filter(is.na(count) | count < 1)
+  error.list$R_duplicates <- as_tibble(duplicated(data$regeneration)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
+    inner_join(., data$regeneration %>% rownames_to_column("id"), by = "id")
+  error.list$R_ak <- data$regeneration %>% group_by(date, plotid, species, htclass, regeneratedon) %>% filter(n() > 1)
   
   # regeneration_subplot
   
@@ -426,7 +446,7 @@ circleFun <- function(r){
 plotTree <- function(PL){
   #' @description create plot map with tree position, size, status, and species
   #' @param PL unique plotid
-
+  
   data.gg <- data.map %>% filter(plotid %in% PL)
   
   ggplot(data.gg) +
@@ -471,16 +491,36 @@ clean_structural_data <- function(data){
   
   # plot
   
-  data.clean$plot <- tbl(KELuser, "plot") %>%
+  data.clean$plot <- tbl(KELuser, "plot") %>% 
     filter(id %in% old.plot.id) %>%
-    select(plotid, country, location, stand, plot, subplot, lng, lat, plotsize_old = plotsize, dbh_min, plottype, foresttype, altitude_m, ownership) %>%
+    select(plotid, lng_old = lng, lat_old = lat, plotsize_old = plotsize) %>%
     collect() %>%
     right_join(., data$plot, by = "plotid") %>%
     mutate(census = case_when(
-      !is.na(plotsize_old) & plotsize %in% plotsize_old  ~ 2,
-      !is.na(plotsize_old) & plotsize > plotsize_old ~ 3,
-      !is.na(plotsize_old) & plotsize < plotsize_old ~ 4)) %>%
-    select(-pid, -plotsize_old)
+             is.na(plotsize_old) ~ 1,
+             !is.na(plotsize_old) & plotsize %in% plotsize_old  ~ 2,
+             !is.na(plotsize_old) & plotsize > plotsize_old ~ 3,
+             !is.na(plotsize_old) & plotsize < plotsize_old ~ 4),
+           lng = ifelse(is.na(lng), lng_old, lng),
+           lat = ifelse(is.na(lat), lat_old, lat),
+           altitude_m = NA,
+           slope = round(slope, 0),
+           aspect = round(aspect, 0)) %>%
+    select(-lng_old, -lat_old, -plotsize_old)
+  
+  DEM <- rast("C:/Users/vosta/Desktop/KEL/db/data/external/dem/aster/Europe/DEM_Aster_Europe.tif")
+  
+  for (i in data.clean$plot$plotid) {
+    
+    coord <- data.clean$plot %>% filter(plotid %in% i) %>% select(lng, lat)
+    
+    data.clean$plot <- data.clean$plot %>% 
+      mutate(altitude_m = ifelse(plotid %in% i, 
+                                 round(extract(DEM, coord, method = "bilinear")[1,2], 0),
+                                 altitude_m))
+    
+    remove(coord)
+  }
   
   # mortality
   
@@ -501,21 +541,21 @@ clean_structural_data <- function(data){
     distinct(., date, treeid, mort_agent)
   
   # tree
-  
+    
   data.clean$tree <- tbl(KELuser, "tree") %>%
     filter(plot_id %in% old.plot.id) %>%
     select(treeid, old_treen = treen, old_x = x_m) %>%
     collect() %>%
     right_join(., data$tree, by = "treeid") %>%
     inner_join(., data.clean$plot %>% select(plotid, plotsize, foresttype), by = "plotid") %>%
-    inner_join(., tbl(KELuser, "plot") %>%
+    left_join(., tbl(KELuser, "plot") %>%
                  filter(id %in% old.plot.id) %>%
                  select(plotid, plotsize_old = plotsize, dbh_min_old = dbh_min) %>%
                  collect(),
                by = "plotid") %>%
-    mutate(treen = as.character(as.numeric(treen)),
-           distance_m = sqrt(abs(x_m^2) + abs(y_m^2)),
+    mutate(distance_m = sqrt(abs(x_m^2) + abs(y_m^2)),
            onplot = case_when(
+             is.na(distance_m) ~ 99,
              plotsize %in% 500 & distance_m <= 12.62 ~ 1,
              plotsize %in% 1000 & foresttype %in% c("spruce", "managed") & distance_m <= 17.84 ~ 1,
              plotsize %in% 1000 & foresttype %in% "beech" & distance_m <= 7.99 ~ 1,
@@ -524,8 +564,7 @@ clean_structural_data <- function(data){
              plotsize %in% 1500 & distance_m > 7.99 & distance_m <= 17.84 ~ 2,
              plotsize %in% 1500 & distance_m > 17.84 & distance_m <= 21.85 ~ 3,
              .default = 0),
-           treetype = "0",
-      census = case_when(
+           census = case_when(
              !treetype %in% "0" ~ 0,
              plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 1] ~ 0,
              !is.na(old_treen) & is.na(old_x) ~ 3,
@@ -542,95 +581,26 @@ clean_structural_data <- function(data){
              is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm < dbh_min_old ~ 3,
              is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
              is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm > dbh_min_old + 50 ~ 2,
-             .default = 0),
-      growth = ifelse(!status %in% c(1:4), -1, growth),
-      growth = ifelse(status %in% c(1:4) & is.na(growth), 99, growth),
-      layer = ifelse(!status %in% c(1:4), -1, layer),
-      layer = ifelse(status %in% c(1:4) & is.na(layer), 99, layer),
-      decay = ifelse(status %in% c(0, 10), 5, decay),
-      decay = ifelse(status %in% c(1:4), -1, decay),
-      decay = ifelse(!status %in% c(1:4) & is.na(decay), 99, decay),
-      decay_wood = ifelse(status %in% c(1:4), -1, decay_wood),
-      decay_wood = ifelse(!status %in% c(1:4) & is.na(decay_wood), 99, decay_wood),
-      decayht = ifelse(status %in% c(0, 10) | decay %in% 5, 0, decayht),
-      decayht = ifelse(status %in% c(1:4), -1, decayht),
-      decayht = ifelse(!status %in% c(1:4) & is.na(decayht), 99, decayht)) %>%
-    select(-old_treen, -old_x, -pid, -tid, -plotsize, -foresttype, -plotsize_old, -dbh_min_old, -distance_m)
-  
-  # tree_quality
-  
-  # tree.db <- tbl(KELuser, "tree") %>%
-  #   filter(plot_id %in% old.plot.id) %>%
-  #   select(treeid, onplot, treetype, x_m, y_m, status, growth, layer, species, dbh_mm, height_m, decay, decayht) %>%
-  #   collect()
-  #   
-  # data.clean$tree_quality <- data.clean$tree %>%
-  #   inner_join(., tree.db, by = "treeid") %>%
-  #   mutate(x_m_diff = ifelse(!x_m.x %in% NA & !x_m.y %in% NA, abs(x_m.x - x_m.y), 0),
-  #          y_m_diff = ifelse(!y_m.x %in% NA & !y_m.y %in% NA, abs(y_m.x - y_m.y), 0),
-  #          diff_m = sqrt(x_m_diff^2 + y_m_diff^2),
-  #          quality1 = ifelse(species.x != species.y, 1, NA),
-  #          quality2 = case_when(
-  #            status.x %in% c(1:4) & !status.y %in% c(1:4, 99) ~ 2,
-  #            status.x %in% c(1:4) & status.y %in% c(1:4) & status.x < status.y ~ 2,
-  #            status.x %in% 0 & status.y %in% 10 ~ 2,
-  #            status.x %in% 10 & status.y %in% 0 ~ 2,
-  #            !status.x %in% c(0, 10) & status.y %in% c(0, 10) ~ 2, 
-  #            status.x %in% c(11:14) & status.y %in% c(11:14) & status.x < status.y ~ 2,
-  #            status.x %in% 15 & !status.y %in% c(1, 11, 99) ~ 2,
-  #            status.x %in% 11 & status.y %in% 15 ~ 2,
-  #            status.x %in% 16 & status.y %in% c(4, 14) ~ 2,
-  #            !status.x %in% c(0, 10, 16) & status.y %in% 16 ~ 2,
-  #            status.x %in% 17 & !status.y %in% c(1, 11, 17, 99) ~ 2,
-  #            status.x %in% 11 & status.y %in% 17 ~ 2,
-  #            status.x %in% c(21:23) & status.y %in% c(21:23) & status.x < status.y ~ 2,
-  #            status.x %in% c(21:23) & !status.y %in% c(1:4, 21:23) ~ 2),
-  #          quality3 = ifelse(growth.x %in% c(0, 1, 99) & growth.y %in% -1, 3, NA),
-  #          quality4 = case_when(
-  #            status.x %in% c(1:4) & dbh_mm.x < dbh_mm.y ~ 4,
-  #            !status.x %in% c(1:4) & !status.y %in% c(1:4) & dbh_mm.x > dbh_mm.y ~ 4),
-  #          quality5 = case_when(
-  #            decay.x %in% c(1:5) & decay.y %in% (1:5) & decay.x < decay.y ~ 5,
-  #            decay.x %in% -1 & !decay.y %in% -1 ~ 5),
-  #          quality6 = ifelse(onplot.x != onplot.y, 6, NA),
-  #          quality7 = ifelse(diff_m > 0.75, 7, NA),
-  #          quality8 = ifelse(layer.x %in% c(11:13, 99) & layer.y %in% -1, 8, NA),
-  #          quality9 = case_when(
-  #            decayht.x %in% -1 & !decayht.y %in% -1 ~ 9,
-  #            decayht.x %in% c(0:5) & decayht.y %in% c(0:5) & decayht.x > decayht.y ~ 9),
-  #          quality10 = case_when(
-  #            status.x %in% 1 & height_m.x < height_m.y ~ 10,
-  #            status.x %in% c(11, 15, 21) & height_m.x < height_m.y ~ 10),
-  #          quality11 = ifelse(treetype.x != treetype.y, 11, NA)) %>%
-  #   select(date, treeid, quality1:quality11) %>%
-  #   gather(., key, quality, quality1:quality11) %>%
-  #   filter(!quality %in% NA) %>%
-  #   select(-key)
-  
+             .default = 0)) %>%
+    select(-old_treen, -old_x, -plotsize, -foresttype, -plotsize_old, -dbh_min_old, -distance_m)
+
   # microsites
   
-  data.clean$microsites <- data$microsites %>%
-    filter(!is.na(microsite)) %>%
-    mutate(count = ifelse(is.na(count), 1, count),
-           count = ifelse(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47), NA, count),
-           method = 2) %>%
-    select(-pid, -tid)
-  
+  data.clean$microsites <- data$microsites %>% 
+    mutate(count = ifelse(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47), NA, count),
+           method = 2)
+ 
   # deadwood
   
   data.clean$deadwood <- data$deadwood
   
   # regeneration
   
-  # data.clean$regeneration <- data$regeneration
+  data.clean$regeneration <- data$regeneration
   
   # regeneration_subplot
   
   data.clean$regeneration_subplot <- data$regeneration_subplot
-  
-  # regref
-  
-  data.clean$regref <- data$regref %>% select(-pid)
   
   # soil
   

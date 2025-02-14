@@ -1,0 +1,247 @@
+# 0. setup ----------------------------------------------------------------
+
+# R 4.2.3 (2023-03-15) "Shortstop Beagle"
+
+library(openxlsx) # 4.2.5.2
+library(pool) # 1.0.3
+library(RPostgreSQL) # 0.7-6 (DBI 1.2.3)
+library(tidyverse) # 2.0.0 (dplyr 1.1.4, forcats 1.0.0, ggplot2 3.5.1, lubridate 1.9.3, purr 1.0.2, readr 2.1.5, stringr 1.5.1, tibble 3.2.1, tidyr 1.3.1)
+library(terra) # 1.8.10
+
+source("pw.R")
+
+source("data/control/structure/thermophilic_structure_control_fc.R")
+
+fk <- dbGetQuery(KELuser, "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%fk'")
+
+fk.list <- list()
+
+for (i in fk$tablename){
+  
+  fk.list[i] <- tbl(KELuser, paste(i)) %>% collect()
+  
+}
+
+# 1. STRUCTURAL DATA ------------------------------------------------------
+
+# 1. 1. read --------------------------------------------------------------
+
+data.raw <- list()
+
+path <- "data/control/inp"
+
+# 1. 1. 1. forms ----------------------------------------------------------
+
+fr <- list.files(path, pattern = "_fr.xlsx", full.names = T)
+
+for (i in fr){
+  
+  data <- read_structural_data(i)
+  
+  data.raw$plot <- bind_rows(data.raw$plot, data$plot)
+  data.raw$tree <- bind_rows(data.raw$tree, data$tree)
+  data.raw$microsites <- bind_rows(data.raw$microsites, data$microsites)
+  data.raw$mortality <- bind_rows(data.raw$mortality, data$mortality)
+  data.raw$deadwood <- bind_rows(data.raw$deadwood, data$deadwood)
+  data.raw$regeneration <- bind_rows(data.raw$regeneration, data$regeneration)
+  data.raw$regeneration_subplot <- bind_rows(data.raw$regeneration_subplot, data$regeneration_subplot)
+  # data.raw$soil <- bind_rows(data.raw$soil, data$soil)
+  # data.raw$vegetation <- bind_rows(data.raw$vegetation, data$vegetation)
+  # data.raw$habitat <- bind_rows(data.raw$habitat, data$habitat)
+  
+  remove(data)
+  
+}
+
+## summarise regeneration due to browsing exclusion
+
+data.raw$regeneration <- data.raw$regeneration %>% 
+  group_by(date, plotid, species, htclass, regeneratedon) %>% 
+  summarise(count = sum(count)) %>% 
+  ungroup()
+
+## change browsing codes for reg_subplot and summarise
+data.raw$regeneration_subplot <- data.raw$regeneration_subplot %>%
+  mutate(browsing = ifelse(browsing %in% 1, 1, 6)) %>%
+  group_by(date, plotid, subplot_n, subplotsize_m2, species, htclass, browsing, regeneratedon) %>%
+  summarise(count = sum(count)) %>%
+  ungroup()
+
+# 1. 1. 2. fieldmap -------------------------------------------------------
+
+## manually convert 'Date' column in 'Plots' sheet to 'Date (short)' format 
+## and check it against 'EDIT_USER' & 'EDIT_DATE' columns -> fill in if necessary
+
+fm <- list.files(path, pattern = "_fm.xlsx", full.names = T)
+
+for (i in fm){
+  
+  data.raw$tree <- read.xlsx(i, sheet = "Plots", detectDates = T) %>%
+    filter(!is.na(Date)) %>%
+    select(pid = ID, plotid = Plotid) %>%
+    inner_join(., read.xlsx(i, sheet = "Trees") %>%
+                 select(pid = IDPlots, treen = ID, x = x_m, y = y_m),
+               by = "pid") %>%
+    select(-pid) %>%
+    mutate(plotid = as.character(plotid),
+           treen = as.character(treen),
+           x = as.numeric(x),
+           y = as.numeric(y)) %>%
+    right_join(., data.raw$tree, by = c("plotid", "treen")) %>%
+    mutate(x_m = ifelse(is.na(x_m), x, x_m),
+           y_m = ifelse(is.na(y_m), y, y_m)) %>%
+    select(-x, -y)
+
+}
+
+## check missing tree positions
+
+data.raw$tree %>% filter(is.na(x_m) | is.na(y_m))
+
+## check tree-stem species
+data.raw$tree %>% 
+  distinct(., date, plotid, treen, species) %>%
+  group_by(date, plotid, treen) %>%
+  filter(n() > 1)
+
+## assemble treeid
+   
+data.raw$tree <- data.raw$tree %>%
+  mutate(treeid = case_when(
+    nchar(treen) == 1 ~ paste0("00", treen),
+    nchar(treen) == 2 ~ paste0("0", treen),
+    nchar(treen) == 3 ~ treen),
+    treeid = paste(plotid, treeid, stem, sep = "_")) %>%
+  select(-stem)
+
+# 1. 1. 3. previous census ------------------------------------------------
+
+old.plot.id <- tbl(KELuser, "plot") %>%
+  filter(plotid %in% local(unique(data.raw$plot$plotid)) & !date %in% local(unique(data.raw$plot$date)),
+         !census %in% 8) %>%
+  select(plotid, date, id) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  pull(id)
+
+# 1. 2. check -------------------------------------------------------------
+
+error.list <- check_structural_data(data = data.raw, fk = fk.list)
+
+## additional tree position check
+
+p.check <- tbl(KELuser, "tree") %>%
+  filter(plot_id %in% old.plot.id) %>%
+  select(treeid, x_m, y_m) %>%
+  collect() %>%
+  inner_join(., data.raw$tree %>% select(plotid, treeid, x_m, y_m), by = "treeid") %>%
+  mutate(diff_m = sqrt(abs(x_m.x - x_m.y)^2 + abs(y_m.x - y_m.y)^2)) %>%
+  group_by(plotid) %>%
+  summarise(total = n(),
+            shift = length(treeid[diff_m > 0.5]),
+            sus = shift / total * 100) %>%
+  filter(sus > 33) %>%
+  pull(plotid)
+
+data.map <- tbl(KELuser, "tree") %>%
+  filter(plot_id %in% old.plot.id,
+         !is.na(x_m), !is.na(y_m),
+         !treetype %in% c("m", "x", "t", "g", "r")) %>%
+  inner_join(., tbl(KELuser, "plot") %>% filter(plotid %in% p.check), by = c("plot_id" = "id")) %>%
+  select(date, plotid, treen, x_m, y_m, species, status, dbh_mm) %>%
+  collect() %>%
+  bind_rows(., data.raw$tree %>% filter(plotid %in% p.check) %>%
+              select(date, plotid, treen, x_m, y_m, species, status, dbh_mm)) %>%
+  mutate(status = ifelse(status %in% c(1:4), "alive", status),
+         status = ifelse(status %in% c(0, 10:23), "dead", status),
+         species = ifelse(
+           species %in% c("Acer",
+                          "Acer campestre",
+                          "Acer heldreichii",
+                          "Acer obtusatum",
+                          "Acer platanoides",
+                          "Acer pseudoplatanus"),
+           "Acer", species),
+         species = ifelse(
+           species %in% c("Sorbus",
+                          "Sorbus aria",
+                          "Sorbus aucuparia",
+                          "Sorbus torminalis"),
+           "Sorbus", species),
+         species = ifelse(
+           species %in% c("Fraxinus",
+                          "Fraxinus excelsior",
+                          "Fraxinus ornus"),
+           "Fraxinus", species),
+         species = ifelse(
+           species %in% c("Quercus cerris",
+                          "Quercus petraea"),
+           "Quercus", species),
+         species = ifelse(
+           species %in% c("Pinus cembra",
+                          "Pinus sylvestris"),
+           "Pinus", species),
+         species = ifelse(
+           !species %in% c("Picea abies",
+                           "Fagus sylvatica",
+                           "Abies alba",
+                           "Acer",
+                           "Sorbus",
+                           "Fraxinus",
+                           "Quercus",
+                           "Ostrya carpinifolia", 
+                           "Pinus"),
+           "Others", species),
+         status = as.factor(status),
+         species = as.factor(species)) %>%
+  arrange(plotid, date) %>%
+  unite(., plotid, c(date, plotid), sep = "-")
+
+pdf("data/control/structure/treePosCheck.pdf", width = 9.2, height = 8, pointsize = 12, onefile = T)
+
+for(PL in unique(data.map$plotid)){
+  
+  print(plotTree(PL))
+  
+}
+
+dev.off()
+
+# 1. 3. clean -------------------------------------------------------------
+
+## 'plottype', 'dbh_min' & 'treetype' needs to be checked/edited manually
+## plot 'census' too in case of exceptions (missing trees/positions)
+
+tbl(KELuser, "plot") %>% 
+  filter(id %in% old.plot.id) %>%
+  distinct(., plottype, dbh_min, census, plotsize)
+
+ggplot(data.raw$tree) + 
+  geom_histogram(aes(x = dbh_mm), binwidth = 1) + 
+  scale_x_continuous(breaks = seq(0, 2000, 10)) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle = 90))
+
+## check if tree status needs to be adjusted according to mort_agent (manually)
+## double check tree census! (case_when() malfunctioning)
+
+data.clean <- clean_structural_data(data = data.raw)
+
+# 1. 4. export ------------------------------------------------------------
+
+path <- "data/control/out/"
+
+for (i in names(data.clean)){
+  
+  name <- paste(unique(data.clean$plot$date), i, sep = "_")
+  
+  write.table(data.clean[[i]], paste0(path, name, ".csv"), sep = ",", row.names = F, na = "")
+  
+}
+
+# ! close database connection ---------------------------------------------
+
+poolClose(KELadmin);poolClose(KELuser)
