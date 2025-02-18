@@ -74,8 +74,10 @@ paramsGetData <- function(plot.id, params){
                      select(tree_id = id, treeid, plot_id),
                    by = "tree_id") %>%
         inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, date, plotid), by = "plot_id") %>%
-        inner_join(., tbl(KELuser, "ring") %>% select(ring_id = id, core_id), by = "core_id") %>%
-        select(date, plotid, treeid, subcore, missing_years) %>%
+        inner_join(., tbl(KELuser, "ring") %>% select(core_id, year), by = "core_id") %>%
+        group_by(date, plotid, treeid, subcore, missing_years) %>%
+        summarise(year_min = min(year)) %>%
+        ungroup() %>%
         collect()
     }
     
@@ -483,7 +485,7 @@ paramsCalculate <- function(data, params){
       
       data.params$core_params <- data$core %>% 
         group_by(date, plotid, treeid, subcore) %>%                            
-        summarise(age = sum(n(), first(missing_years))) %>%
+        summarise(age = date - year_min + missing_years + 1) %>%
         group_by(treeid) %>%
         arrange(desc(age), .by_group = T) %>%
         filter(row_number() == 1) %>%
