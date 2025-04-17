@@ -544,7 +544,7 @@ clean_structural_data <- function(data){
     
   data.clean$tree <- tbl(KELuser, "tree") %>%
     filter(plot_id %in% old.plot.id) %>%
-    select(treeid, old_treen = treen, old_x = x_m) %>%
+    select(treeid, old_treen = treen) %>%
     collect() %>%
     right_join(., data$tree, by = "treeid") %>%
     inner_join(., data.clean$plot %>% select(plotid, plotsize, foresttype), by = "plotid") %>%
@@ -567,22 +567,22 @@ clean_structural_data <- function(data){
            census = case_when(
              !treetype %in% "0" ~ 0,
              plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 1] ~ 0,
-             !is.na(old_treen) & is.na(old_x) ~ 3,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & is.na(distance_m) ~ 99,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 500 & distance_m > 12.62 ~ 3,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 1000 & distance_m > 17.84 ~ 3,
+             plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(5,6,7)] ~ 3,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & is.na(distance_m) ~ 99,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 500 & distance_m > 12.62 ~ 3,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 1000 & distance_m > 17.84 ~ 3,
              is.na(old_treen) & is.na(dbh_mm) ~ 99,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm < dbh_min_old ~ 3,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm < dbh_min_old ~ 3,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm > dbh_min_old + 50 ~ 2,
-             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm > dbh_min_old + 50 ~ 2,
-             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm < dbh_min_old ~ 3,
-             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
-             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% c(3, 6)] & dbh_mm > dbh_min_old + 50 ~ 2,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm < dbh_min_old ~ 3,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm < dbh_min_old ~ 3,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 500 & distance_m <= 12.62 & dbh_mm > dbh_min_old + 50 ~ 2,
+             is.na(old_treen) & plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & plotsize_old %in% 1000 & distance_m <= 17.84 & dbh_mm > dbh_min_old + 50 ~ 2,
+             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & dbh_mm < dbh_min_old ~ 3,
+             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & dbh_mm >= dbh_min_old & dbh_mm <= dbh_min_old + 50 ~ 1,
+             is.na(old_treen) & !plotid %in% data.clean$plot$plotid[data.clean$plot$census %in% 3] & dbh_mm > dbh_min_old + 50 ~ 2,
              .default = 0)) %>%
-    select(-old_treen, -old_x, -plotsize, -foresttype, -plotsize_old, -dbh_min_old, -distance_m)
+    select(-old_treen, -plotsize, -foresttype, -plotsize_old, -dbh_min_old, -distance_m)
 
   # microsites
   
