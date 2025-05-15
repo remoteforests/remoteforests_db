@@ -782,8 +782,8 @@ paramsCalculate <- function(data, params){
     
     if(i == "temperature"){
       
-      load("C:/Users/Ondrej_Vostarek/Desktop/KEL/db/scripts/database/model_annual.rda")
-      load("C:/Users/Ondrej_Vostarek/Desktop/KEL/db/scripts/database/model_vegetation.rda")
+      load("C:/Users/vosta/Desktop/KEL/db/scripts/database/model_annual.rda")
+      load("C:/Users/vosta/Desktop/KEL/db/scripts/database/model_vegetation.rda")
       
       plots <- data$temperature
       
