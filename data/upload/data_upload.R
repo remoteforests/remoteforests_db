@@ -189,7 +189,7 @@ upload_data(data.prepared)
 # 7. STAND POLYGONS -------------------------------------------------------
 
 data <- tbl(KELuser, "plot") %>%
-  filter(ownership %in% 1,
+  filter(ownership %in% c(1,2),
          !is.na(lng), 
          !is.na(lat),
          plottype %in% c(2,3,4,8)) %>%
