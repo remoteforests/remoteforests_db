@@ -11,21 +11,9 @@ source("pw.R")
 year <- "" # insert year of remeasurement
 area <- "" # insert abbreviation of remeasured area
 
-## JIZ 2024
+## CRO 2025
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(standshort %in% "JIZ",
-         !is.na(lng), !is.na(lat)) %>%
-  collect() %>%
-  group_by(plotid) %>%
-  arrange(desc(date), .by_group = T) %>%
-  filter(row_number() == 1) %>%
-  ungroup() %>%
-  distinct(., id) %>% 
-  pull(id)
-
-## ROM 2024
-plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Fagaras", "Semenic"),
+  filter(country %in% "Croatia",
          foresttype %in% "beech",
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
@@ -36,14 +24,35 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## SLO 2024
+## ROM 2025
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Great Fatra", "Little Fatra", "Low Tatras", "Polana", "Vepor Hills"),
-         (foresttype %in% "beech" | location %in% "Polana") & !foresttype %in% "managed",
-         !is.na(lng), !is.na(lat),
-         !census %in% 8,
-         !plottype %in% 2,
-         !plotid %in% c("SLO_SUT_005_1", "SLO_SUT_005_2")) %>%
+  filter(stand %in% c("Criva", "Paulic"),
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## SLO 2025
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(location %in% c("Poloniny", "Vihorlat"),
+         !date %in% 2022,
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## SLO_T 2025
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(stand %in% c("Kolienec", "Ploska"),
+         !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
   arrange(desc(date), .by_group = T) %>%
@@ -80,8 +89,8 @@ plotTree <- function(PL){
                    color = species)) +
     scale_size_continuous("DBH (mm)", 
                           limits = c(0, 1400),
-                          breaks = c(0, 200, 400, 600, 800, 1000, 1200, 1400),
-                          range = c(2, 9)) +
+                          breaks = c(0, 200, 400, 600, 800, 1000, 1200, 1400, 1600),
+                          range = c(2, 10)) +
     scale_shape_manual("Status", values = c("dead" = 17,
                                             "alive" = 19,
                                             "99" = 18),
