@@ -9,21 +9,9 @@ library(tidyverse) # 2.0.0 (dplyr 1.1.4, forcats 1.0.0, ggplot2 3.5.1, lubridate
 
 source("pw.R")
 
-## JIZ 2024
+## CRO 2025
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(standshort %in% "JIZ",
-         !is.na(lng), !is.na(lat)) %>%
-  collect() %>%
-  group_by(plotid) %>%
-  arrange(desc(date), .by_group = T) %>%
-  filter(row_number() == 1) %>%
-  ungroup() %>%
-  distinct(., id) %>% 
-  pull(id)
-
-## ROM 2024
-plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Fagaras", "Semenic"),
+  filter(country %in% "Croatia",
          foresttype %in% "beech",
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
@@ -34,14 +22,35 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## SLO 2024
+## ROM 2025
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Great Fatra", "Little Fatra", "Low Tatras", "Polana", "Vepor Hills"),
-         (foresttype %in% "beech" | location %in% "Polana") & !foresttype %in% "managed",
-         !is.na(lng), !is.na(lat),
-         !census %in% 8,
-         !plottype %in% 2,
-         !plotid %in% c("SLO_SUT_005_1", "SLO_SUT_005_2")) %>%
+  filter(stand %in% c("Criva", "Paulic"),
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## SLO 2025
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(location %in% c("Poloniny", "Vihorlat"),
+         !date %in% 2022,
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## SLO_T 2025
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(stand %in% c("Kolienec", "Ploska"),
+         !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
   arrange(desc(date), .by_group = T) %>%
@@ -87,6 +96,22 @@ tree <- tbl(KELuser, "tree") %>%
   # group_by(plot_id) %>%
   # complete(treen = 1:max(treen), fill = list(plot_id = first(.$plot_id))) %>%
   # ungroup()
+
+## thermophilic
+
+# tree <- tbl(KELuser, "tree") %>%
+#   filter(plot_id %in% plot.id,
+#          !is.na(x_m), !is.na(y_m),
+#          treetype %in% "0") %>%
+#   mutate(treen = as.numeric(treen),
+#          x_m = round(x_m, 3),
+#          y_m = round(y_m, 3)) %>%
+#   distinct(., plot_id, treen, x_m, y_m, species) %>%
+#   collect() %>%
+#   inner_join(., sp.lookup, by = c("species" = "value")) %>%
+#   mutate(species = id) %>%
+#   select(-id) %>%
+#   arrange(plot_id, treen)
 
 # 1. 3. regRefPoints ------------------------------------------------------
 
