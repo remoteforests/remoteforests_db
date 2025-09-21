@@ -48,8 +48,7 @@ upload_data(data.prepared)
 
 name <- c(
   "mortality",
-  "microsites",
-  "tree_quality"
+  "microsites"
 )
 
 data.read <- read_data(path, name)

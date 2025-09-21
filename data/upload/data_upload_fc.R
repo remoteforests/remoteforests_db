@@ -16,7 +16,7 @@ read_data <- function(path, name){
   
   for (i in name) {
     
-    if(!i %in% c("plot", "tree", "mortality", "microsites", "tree_quality",
+    if(!i %in% c("plot", "tree", "mortality", "microsites",
                  "deadwood","regeneration", "regeneration_subplot",
                  "reg_subplot_position", "soil_profile", "vegetation", 
                  "habitat_signs", "core", "ring", "canopy_analysis"))
@@ -115,20 +115,6 @@ read_data <- function(path, name){
                                  microsite = as.numeric(microsite),
                                  count = as.numeric(count),
                                  method = as.numeric(method)))
-      }
-    }
-
-    # tree_quality ------------------------------------------------------------
-    
-    if(i == "tree_quality"){
-              
-      for(j in list.files(path, pattern = "*_tree_quality.csv", full.names = T)){
-        
-        df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
-                          rename_col(.) %>%
-                          mutate(date = as.numeric(date),
-                                 treeid = as.character(treeid),
-                                 quality = as.numeric(quality)))
       }
     }
 
@@ -384,7 +370,7 @@ prepare_data <- function(data){
         
     # tree_id -----------------------------------------------------------------
 
-    if(i %in% c("mortality", "microsites", "tree_quality", "core")){
+    if(i %in% c("mortality", "microsites", "core")){
         
       data.list[[i]] <- as.data.frame(data[[i]]) %>% 
         inner_join(., tree_id, by = c("date", "treeid")) %>%
