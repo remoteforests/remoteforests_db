@@ -484,21 +484,21 @@ clean_structural_data <- function(data){
   
   # mortality
   
-  data.clean$mortality <- tbl(KELuser, "tree") %>%
-    filter(plot_id %in% old.plot.id) %>%
-    select(treeid, status_old = status) %>%
-    collect() %>%
-    inner_join(., data$tree %>% select(treeid, species, status_new = status), by = "treeid") %>%
-    filter(status_old %in% c(1:4) & !status_new %in% c(1:4)) %>%
-    left_join(., data$mortality, by = "treeid") %>%
-    mutate(date = ifelse(is.na(date), unique(data$plot$date), date),
-           mort_agent = ifelse(is.na(mort_agent), 99, mort_agent),
-           mort_agent = case_when(
-             mort_agent %in% 99 & status_new %in% c(21:23) & species %in% "Picea abies" ~ 411,
-             mort_agent %in% 99 & status_new %in% 0 ~ 71,
-             mort_agent %in% 99 & status_new %in% 15 ~ 21,
-             .default = mort_agent)) %>%
-    distinct(., date, treeid, mort_agent)
+  # data.clean$mortality <- tbl(KELuser, "tree") %>%
+  #   filter(plot_id %in% old.plot.id) %>%
+  #   select(treeid, status_old = status) %>%
+  #   collect() %>%
+  #   inner_join(., data$tree %>% select(treeid, species, status_new = status), by = "treeid") %>%
+  #   filter(status_old %in% c(1:4) & !status_new %in% c(1:4)) %>%
+  #   left_join(., data$mortality, by = "treeid") %>%
+  #   mutate(date = ifelse(is.na(date), unique(data$plot$date), date),
+  #          mort_agent = ifelse(is.na(mort_agent), 99, mort_agent),
+  #          mort_agent = case_when(
+  #            mort_agent %in% 99 & status_new %in% c(21:23) & species %in% "Picea abies" ~ 411,
+  #            mort_agent %in% 99 & status_new %in% 0 ~ 71,
+  #            mort_agent %in% 99 & status_new %in% 15 ~ 21,
+  #            .default = mort_agent)) %>%
+  #   distinct(., date, treeid, mort_agent)
   
   # tree
   
