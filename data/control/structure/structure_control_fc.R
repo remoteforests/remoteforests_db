@@ -557,56 +557,6 @@ clean_structural_data <- function(data){
       decayht = ifelse(!status %in% c(1:4) & is.na(decayht), 99, decayht)) %>%
     select(-old_treen, -pid, -tid, -plotsize, -foresttype, -plotsize_old, -dbh_min_old, -distance_m)
   
-  # tree_quality
-  
-  # tree.db <- tbl(KELuser, "tree") %>%
-  #   filter(plot_id %in% old.plot.id) %>%
-  #   select(treeid, onplot, treetype, x_m, y_m, status, growth, layer, species, dbh_mm, height_m, decay, decayht) %>%
-  #   collect()
-  #   
-  # data.clean$tree_quality <- data.clean$tree %>%
-  #   inner_join(., tree.db, by = "treeid") %>%
-  #   mutate(x_m_diff = ifelse(!x_m.x %in% NA & !x_m.y %in% NA, abs(x_m.x - x_m.y), 0),
-  #          y_m_diff = ifelse(!y_m.x %in% NA & !y_m.y %in% NA, abs(y_m.x - y_m.y), 0),
-  #          diff_m = sqrt(x_m_diff^2 + y_m_diff^2),
-  #          quality1 = ifelse(species.x != species.y, 1, NA),
-  #          quality2 = case_when(
-  #            status.x %in% c(1:4) & !status.y %in% c(1:4, 99) ~ 2,
-  #            status.x %in% c(1:4) & status.y %in% c(1:4) & status.x < status.y ~ 2,
-  #            status.x %in% 0 & status.y %in% 10 ~ 2,
-  #            status.x %in% 10 & status.y %in% 0 ~ 2,
-  #            !status.x %in% c(0, 10) & status.y %in% c(0, 10) ~ 2, 
-  #            status.x %in% c(11:14) & status.y %in% c(11:14) & status.x < status.y ~ 2,
-  #            status.x %in% 15 & !status.y %in% c(1, 11, 99) ~ 2,
-  #            status.x %in% 11 & status.y %in% 15 ~ 2,
-  #            status.x %in% 16 & status.y %in% c(4, 14) ~ 2,
-  #            !status.x %in% c(0, 10, 16) & status.y %in% 16 ~ 2,
-  #            status.x %in% 17 & !status.y %in% c(1, 11, 17, 99) ~ 2,
-  #            status.x %in% 11 & status.y %in% 17 ~ 2,
-  #            status.x %in% c(21:23) & status.y %in% c(21:23) & status.x < status.y ~ 2,
-  #            status.x %in% c(21:23) & !status.y %in% c(1:4, 21:23) ~ 2),
-  #          quality3 = ifelse(growth.x %in% c(0, 1, 99) & growth.y %in% -1, 3, NA),
-  #          quality4 = case_when(
-  #            status.x %in% c(1:4) & dbh_mm.x < dbh_mm.y ~ 4,
-  #            !status.x %in% c(1:4) & !status.y %in% c(1:4) & dbh_mm.x > dbh_mm.y ~ 4),
-  #          quality5 = case_when(
-  #            decay.x %in% c(1:5) & decay.y %in% (1:5) & decay.x < decay.y ~ 5,
-  #            decay.x %in% -1 & !decay.y %in% -1 ~ 5),
-  #          quality6 = ifelse(onplot.x != onplot.y, 6, NA),
-  #          quality7 = ifelse(diff_m > 0.75, 7, NA),
-  #          quality8 = ifelse(layer.x %in% c(11:13, 99) & layer.y %in% -1, 8, NA),
-  #          quality9 = case_when(
-  #            decayht.x %in% -1 & !decayht.y %in% -1 ~ 9,
-  #            decayht.x %in% c(0:5) & decayht.y %in% c(0:5) & decayht.x > decayht.y ~ 9),
-  #          quality10 = case_when(
-  #            status.x %in% 1 & height_m.x < height_m.y ~ 10,
-  #            status.x %in% c(11, 15, 21) & height_m.x < height_m.y ~ 10),
-  #          quality11 = ifelse(treetype.x != treetype.y, 11, NA)) %>%
-  #   select(date, treeid, quality1:quality11) %>%
-  #   gather(., key, quality, quality1:quality11) %>%
-  #   filter(!quality %in% NA) %>%
-  #   select(-key)
-  
   # microsites
   
   data.clean$microsites <- data$microsites %>%
