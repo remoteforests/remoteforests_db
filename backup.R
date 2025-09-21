@@ -20,7 +20,7 @@ if(!dir.exists(paste0(path, date))){dir.create(paste0(path, date))}
 tables <- c(
   "plot","parameters_plot", "spatial_hierarchy", "stand_polygons",
   "tree","species_fk","wood_density","biomass_eq",
-  "tree_quality","mortality","microsites","lichen", 
+  "mortality","microsites","lichen", 
   "core", "distance_to_pith", "ring","pointyear", 
   "dist_data_ca", "dist_data_ai", "dist_data_gap", "dist_data_dbh", "dist_data_age",
   "dist_param", "dist_tree", "dist_plot", "dist_chrono", "dist_event", "dist_polygons", "dist_stand",
