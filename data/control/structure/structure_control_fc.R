@@ -84,14 +84,14 @@ read_fm_data <- function(file){
   
   # microsites
   
-  data.list$microsites <- read.xlsx(file, sheet = "Microsites") %>%
-    select(pid = IDPlots, tid = IDTrees, Microsite, Count) %>%
-    mutate(pid = as.numeric(pid),
-           tid = as.numeric(tid),
-           Microsite = as.numeric(Microsite),
-           Count = as.numeric(Count))
-
-  names(data.list$microsites) <- tolower(names(data.list$microsites))
+  # data.list$microsites <- read.xlsx(file, sheet = "Microsites") %>%
+  #   select(pid = IDPlots, tid = IDTrees, Microsite, Count) %>%
+  #   mutate(pid = as.numeric(pid),
+  #          tid = as.numeric(tid),
+  #          Microsite = as.numeric(Microsite),
+  #          Count = as.numeric(Count))
+  # 
+  # names(data.list$microsites) <- tolower(names(data.list$microsites))
   
   # regref
   
@@ -113,7 +113,7 @@ read_fm_data <- function(file){
   
   data.list$mortality <- data.list$mortality %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
   
-  data.list$microsites <- data.list$microsites %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
+  # data.list$microsites <- data.list$microsites %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
   
   # data.list$regref <- data.list$regref %>% inner_join(., data.list$plot %>% select(pid, date, plotid), by = "pid")
   
@@ -321,13 +321,13 @@ check_structural_data <- function(data, fk){
   
   # microsites
   
-  error.list$Mi_not_in_tree <- anti_join(data$microsites, data$tree, by = c("date", "treeid"))
-  error.list$Mi_microsite <- data$microsites %>% filter(!microsite %in% fk$microsite_fk)
-  error.list$Mi_count <- data$microsites %>% filter(count < 1)
-  error.list$Mi_countable <- data$microsites %>% filter(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47) & !is.na(count))
-  error.list$Mi_duplicates <- as_tibble(duplicated(data$microsites)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
-    inner_join(., data$microsites %>% rownames_to_column("id"), by = "id")
-  error.list$Mi_ak <- data$microsites %>% group_by(date, treeid, microsite) %>% filter(n() > 1)
+  # error.list$Mi_not_in_tree <- anti_join(data$microsites, data$tree, by = c("date", "treeid"))
+  # error.list$Mi_microsite <- data$microsites %>% filter(!microsite %in% fk$microsite_fk)
+  # error.list$Mi_count <- data$microsites %>% filter(count < 1)
+  # error.list$Mi_countable <- data$microsites %>% filter(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47) & !is.na(count))
+  # error.list$Mi_duplicates <- as_tibble(duplicated(data$microsites)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
+  #   inner_join(., data$microsites %>% rownames_to_column("id"), by = "id")
+  # error.list$Mi_ak <- data$microsites %>% group_by(date, treeid, microsite) %>% filter(n() > 1)
   
   # deadwood
   
@@ -562,12 +562,12 @@ clean_structural_data <- function(data){
   
   # microsites
   
-  data.clean$microsites <- data$microsites %>%
-    filter(!is.na(microsite)) %>%
-    mutate(count = ifelse(is.na(count), 1, count),
-           count = ifelse(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47), NA, count),
-           method = 2) %>%
-    select(-pid, -tid)
+  # data.clean$microsites <- data$microsites %>%
+  #   filter(!is.na(microsite)) %>%
+  #   mutate(count = ifelse(is.na(count), 1, count),
+  #          count = ifelse(microsite %in% c(11, 20, 23, 25, 26, 29, 32:41, 44:47), NA, count),
+  #          method = 2) %>%
+  #   select(-pid, -tid)
   
   # deadwood
   
