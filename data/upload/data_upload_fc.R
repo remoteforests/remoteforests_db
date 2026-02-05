@@ -130,6 +130,7 @@ read_data <- function(path, name){
                           mutate(date = as.numeric(date),
                                  plotid = as.character(plotid),
                                  transect = as.numeric(transect),
+                                 transect_length_m = as.numeric(transect_length_m),
                                  species = as.character(species),
                                  dbh_mm = as.numeric(dbh_mm),
                                  decay = as.numeric(decay)))

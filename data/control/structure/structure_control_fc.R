@@ -130,7 +130,8 @@ read_fr_data <- function(file){
   
   data.list$deadwood <- read.xlsx(file, sheet = "deadwood")
   
-  if(!identical(c("date", "plotid", "transect",	"species", "dbh_mm", "decay"),
+  if(!identical(c("date", "plotid", "transect",	"transect_length_m",
+                  "species", "dbh_mm", "decay"),
                 names(data.list$deadwood)))
     
     stop("Deadwood data do not match with required table format.")
@@ -139,6 +140,7 @@ read_fr_data <- function(file){
     mutate(date = as.numeric(date),
            plotid = as.character(plotid),
            transect = as.numeric(transect),
+           transect_length_m = as.numeric(transect_length_m),
            species = as.character(species),
            dbh_mm = as.numeric(dbh_mm),
            decay = as.numeric(decay))
