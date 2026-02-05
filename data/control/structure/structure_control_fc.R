@@ -93,9 +93,9 @@ read_fm_data <- function(file){
   
   # regref
   
-  data.list$regref <- read.xlsx(file, sheet = "RegRefPoints") %>%
-    filter(IDPlots %in% pid) %>% 
-    select(pid = IDPlots, subplot_n = ID, x_m, y_m)
+  # data.list$regref <- read.xlsx(file, sheet = "RegRefPoints") %>%
+  #   filter(IDPlots %in% pid) %>% 
+  #   select(pid = IDPlots, subplot_n = ID, x_m, y_m)
   
   # output
   
@@ -113,7 +113,7 @@ read_fm_data <- function(file){
   
   data.list$microsites <- data.list$microsites %>% left_join(., data.list$tree %>% select(pid, tid, date, treeid), by = c("pid", "tid"))
   
-  data.list$regref <- data.list$regref %>% inner_join(., data.list$plot %>% select(pid, date, plotid), by = "pid")
+  # data.list$regref <- data.list$regref %>% inner_join(., data.list$plot %>% select(pid, date, plotid), by = "pid")
   
   return(data.list)
 }
@@ -580,7 +580,7 @@ clean_structural_data <- function(data){
   
   # regref
   
-  data.clean$regref <- data$regref %>% select(-pid)
+  # data.clean$regref <- data$regref %>% select(-pid)
   
   # soil
   

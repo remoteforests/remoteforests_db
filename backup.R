@@ -25,7 +25,7 @@ tables <- c(
   "dist_data_ca", "dist_data_ai", "dist_data_gap", "dist_data_dbh", "dist_data_age",
   "dist_param", "dist_tree", "dist_plot", "dist_chrono", "dist_event", "dist_polygons", "dist_stand",
   "deadwood","deadwood_tree","deadwood_position",
-  "regeneration","regeneration_subplot","reg_subplot_position",
+  "regeneration","regeneration_subplot",
   "canopy_analysis",
   "soil_type", "soil_profile", "soil_chemistry",
   "vegetation","habitat_signs",
