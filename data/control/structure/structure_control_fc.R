@@ -51,7 +51,8 @@ read_fm_data <- function(file){
     left_join(., sp, by = "Species") %>%
     select(pid = IDPlots, tid = ID, x_m, y_m, Status, Growth, Layer, species, 
            DBH_mm, Height_m, crownht_m = CrownHeight_m, CrownDiam1_m, CrownDiam2_m,
-           decayht = DecayHeight, decay_wood = DecayWood, Decay, Forked) %>%
+           decayht = DecayHeight, decay_wood = DecayWood, Decay, Forked,
+           dbh_pom = PointOfMeasurement) %>%
     mutate(pid = as.numeric(pid),
            tid = as.numeric(tid),
            x_m = as.numeric(x_m),
@@ -68,7 +69,8 @@ read_fm_data <- function(file){
            decayht = as.numeric(decayht),
            decay_wood = as.numeric(decay_wood),
            Decay = as.numeric(Decay),
-           Forked = as.numeric(Forked))
+           Forked = as.numeric(Forked),
+           dbh_pom = as.numeric(dbh_pom))
   
   names(data.list$tree) <- tolower(names(data.list$tree))
    
@@ -298,6 +300,7 @@ check_structural_data <- function(data, fk){
   error.list$T_decay_alive <- data$tree %>% filter(status %in% c(1:4) & !is.na(decay))
   error.list$T_decay_stump <- data$tree %>% filter(status %in% c(0, 10) & !decay %in% 5)
   error.list$T_forked <- data$tree %>% filter(!forked %in% c(0, 1))
+  error.list$T_dbh_pom <- data$tree %>% filter(!dbh_pom %in% c(0, 1)) 
   error.list$T_duplicates <- as_tibble(duplicated(data$tree)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
     inner_join(., data$tree %>% rownames_to_column("id"), by = "id")
   error.list$T_ak <- data$tree %>% group_by(date, plotid, treeid) %>% filter(n() > 1)

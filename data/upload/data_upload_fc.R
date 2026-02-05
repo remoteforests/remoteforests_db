@@ -84,7 +84,8 @@ read_data <- function(path, name){
                                  crowndiam2_m = as.numeric(crowndiam2_m),
                                  decayht = as.numeric(decayht),
                                  decay_wood = as.numeric(decay_wood),
-                                 decay = as.numeric(decay)))
+                                 decay = as.numeric(decay),
+                                 dbh_pom = as.logical(dbh_pom)))
       }
     }
 
