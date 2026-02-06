@@ -85,6 +85,7 @@ read_data <- function(path, name){
                                  decayht = as.numeric(decayht),
                                  decay_wood = as.numeric(decay_wood),
                                  decay = as.numeric(decay),
+                                 dbh_correction = 0,
                                  dbh_pom = as.logical(dbh_pom)))
       }
     }
