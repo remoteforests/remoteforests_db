@@ -152,24 +152,24 @@ read_structural_data <- function(file){
   
   # regeneration_subplot
   
-  data.list$regeneration_subplot <- read.xlsx(file, sheet = "regeneration_subplot")
-  
-  if(!identical(c("date", "plotid", "subplot_n", "subplotsize_m2", "species", "htclass",
-                  "browsing",	"regeneratedon", "count"), 
-                names(data.list$regeneration_subplot))) 
-    
-    stop("Regeneration_subplot data do not match with required table format.")
-  
-  data.list$regeneration_subplot <- data.list$regeneration_subplot %>%
-    mutate(date = as.numeric(date),
-           plotid = as.character(plotid),
-           subplot_n = as.numeric(subplot_n),
-           subplotsize_m2 = as.numeric(subplotsize_m2),
-           species = as.character(species),
-           htclass = as.numeric(htclass),
-           browsing = as.numeric(browsing),
-           regeneratedon = as.numeric(regeneratedon),
-           count = as.numeric(count))
+  # data.list$regeneration_subplot <- read.xlsx(file, sheet = "regeneration_subplot")
+  # 
+  # if(!identical(c("date", "plotid", "subplot_n", "subplotsize_m2", "species", "htclass",
+  #                 "browsing",	"regeneratedon", "count"), 
+  #               names(data.list$regeneration_subplot))) 
+  #   
+  #   stop("Regeneration_subplot data do not match with required table format.")
+  # 
+  # data.list$regeneration_subplot <- data.list$regeneration_subplot %>%
+  #   mutate(date = as.numeric(date),
+  #          plotid = as.character(plotid),
+  #          subplot_n = as.numeric(subplot_n),
+  #          subplotsize_m2 = as.numeric(subplotsize_m2),
+  #          species = as.character(species),
+  #          htclass = as.numeric(htclass),
+  #          browsing = as.numeric(browsing),
+  #          regeneratedon = as.numeric(regeneratedon),
+  #          count = as.numeric(count))
   
   # soil
   
@@ -372,17 +372,17 @@ check_structural_data <- function(data, fk) {
   
   # regeneration_subplot
   
-  error.list$RS_not_in_plot <- anti_join(data$regeneration_subplot, data$plot, by = c("date", "plotid"))
-  error.list$RS_subplot_n <- data$regeneration_subplot %>% filter(!subplot_n %in% fk$transect_fk)
-  error.list$RS_subplotsize_m2 <- data$regeneration_subplot %>% filter(!subplotsize_m2 %in% 4)
-  error.list$RS_species <- data$regeneration_subplot %>% filter(!species %in% fk$species_fk)
-  error.list$RS_htclass <- data$regeneration_subplot %>% filter(!htclass %in% fk$htclass_fk)
-  error.list$RS_browsing <- data$regeneration_subplot %>% filter(!browsing %in% fk$browsing_fk)
-  error.list$RS_regeneratedon <- data$regeneration_subplot %>% filter(!regeneratedon %in% fk$regeneratedon_fk)
-  error.list$RS_count <- data$regeneration_subplot %>% filter(is.na(count) | count < 1)
-  error.list$RS_duplicates <- as_tibble(duplicated(data$regeneration_subplot)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
-    inner_join(., data$regeneration_subplot %>% rownames_to_column("id"), by = "id")
-  error.list$RS_ak <- data$regeneration_subplot %>% group_by(date, plotid, subplot_n, species, htclass, regeneratedon, browsing) %>% filter(n() > 1)
+  # error.list$RS_not_in_plot <- anti_join(data$regeneration_subplot, data$plot, by = c("date", "plotid"))
+  # error.list$RS_subplot_n <- data$regeneration_subplot %>% filter(!subplot_n %in% fk$transect_fk)
+  # error.list$RS_subplotsize_m2 <- data$regeneration_subplot %>% filter(!subplotsize_m2 %in% 4)
+  # error.list$RS_species <- data$regeneration_subplot %>% filter(!species %in% fk$species_fk)
+  # error.list$RS_htclass <- data$regeneration_subplot %>% filter(!htclass %in% fk$htclass_fk)
+  # error.list$RS_browsing <- data$regeneration_subplot %>% filter(!browsing %in% fk$browsing_fk)
+  # error.list$RS_regeneratedon <- data$regeneration_subplot %>% filter(!regeneratedon %in% fk$regeneratedon_fk)
+  # error.list$RS_count <- data$regeneration_subplot %>% filter(is.na(count) | count < 1)
+  # error.list$RS_duplicates <- as_tibble(duplicated(data$regeneration_subplot)) %>% rownames_to_column("id") %>% filter(value %in% T) %>% 
+  #   inner_join(., data$regeneration_subplot %>% rownames_to_column("id"), by = "id")
+  # error.list$RS_ak <- data$regeneration_subplot %>% group_by(date, plotid, subplot_n, species, htclass, regeneratedon, browsing) %>% filter(n() > 1)
   
   # soil
   
@@ -600,7 +600,7 @@ clean_structural_data <- function(data){
   
   # regeneration_subplot
   
-  data.clean$regeneration_subplot <- data$regeneration_subplot
+  # data.clean$regeneration_subplot <- data$regeneration_subplot
   
   # soil
   
