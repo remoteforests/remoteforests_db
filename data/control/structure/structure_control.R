@@ -46,8 +46,8 @@ for (i in fm){
   data.raw$tms <- bind_rows(data.raw$tms, data$tms)
   data.raw$tree <- bind_rows(data.raw$tree, data$tree)
   data.raw$mortality <- bind_rows(data.raw$mortality, data$mortality)
-  data.raw$microsites <- bind_rows(data.raw$microsites, data$microsites)
-  data.raw$regref <- bind_rows(data.raw$regref, data$regref)
+  # data.raw$microsites <- bind_rows(data.raw$microsites, data$microsites)
+  # data.raw$regref <- bind_rows(data.raw$regref, data$regref)
   
   remove(data)
   
@@ -174,41 +174,41 @@ dev.off()
 
 ### check strange subplot numbers
 
-error <- data.raw$regref %>% filter(!subplot_n %in% c(0:5)) %>% distinct(plotid) %>% pull(plotid)
-
-pdf("data/control/structure/subplotPosCheck.pdf", width = 9.2, height = 8, pointsize = 12, onefile = T)
-
-for (e in error){
-  
-  print(
-    ggplot(data.raw$regref %>% filter(plotid %in% e)) +
-      geom_point(aes(x = x_m, y = y_m)) +
-      annotate("point", x = 0, y = 0, shape = 3, color = "red", size = 3) +
-      geom_text(aes(x_m + 0.5, y_m + 0.5, label = subplot_n), size = 3, color = "grey20") +
-      ggtitle(e)
-  )
-
-}
-
-dev.off()
+# error <- data.raw$regref %>% filter(!subplot_n %in% c(0:5)) %>% distinct(plotid) %>% pull(plotid)
+# 
+# pdf("data/control/structure/subplotPosCheck.pdf", width = 9.2, height = 8, pointsize = 12, onefile = T)
+# 
+# for (e in error){
+#   
+#   print(
+#     ggplot(data.raw$regref %>% filter(plotid %in% e)) +
+#       geom_point(aes(x = x_m, y = y_m)) +
+#       annotate("point", x = 0, y = 0, shape = 3, color = "red", size = 3) +
+#       geom_text(aes(x_m + 0.5, y_m + 0.5, label = subplot_n), size = 3, color = "grey20") +
+#       ggtitle(e)
+#   )
+# 
+# }
+# 
+# dev.off()
 
 ### check all plots if order of subplots is correct (remove previously corrected strange subplots - 99)
 
-pdf("data/control/structure/subplotPosCheck.pdf", width = 9.2, height = 8, pointsize = 12, onefile = T)
-
-for (PL in unique(data.raw$regref$plotid)){
-  
-  print(
-    ggplot(data.raw$regref %>% filter(plotid %in% PL & subplot_n %in% c(0:5))) +
-      geom_point(aes(x = x_m, y = y_m)) +
-      annotate("point", x = 0, y = 0, shape = 3, color = "red", size = 3) +
-      geom_text(aes(x_m + 0.5, y_m + 0.5, label = subplot_n), size = 3, color = "grey20") +
-      ggtitle(PL)
-  )
-  
-}
-
-dev.off()
+# pdf("data/control/structure/subplotPosCheck.pdf", width = 9.2, height = 8, pointsize = 12, onefile = T)
+# 
+# for (PL in unique(data.raw$regref$plotid)){
+#   
+#   print(
+#     ggplot(data.raw$regref %>% filter(plotid %in% PL & subplot_n %in% c(0:5))) +
+#       geom_point(aes(x = x_m, y = y_m)) +
+#       annotate("point", x = 0, y = 0, shape = 3, color = "red", size = 3) +
+#       geom_text(aes(x_m + 0.5, y_m + 0.5, label = subplot_n), size = 3, color = "grey20") +
+#       ggtitle(PL)
+#   )
+#   
+# }
+# 
+# dev.off()
 
 # 1. 3. clean -------------------------------------------------------------
 

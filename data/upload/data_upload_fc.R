@@ -18,7 +18,7 @@ read_data <- function(path, name){
     
     if(!i %in% c("plot", "tree", "mortality", "microsites",
                  "deadwood","regeneration", "regeneration_subplot",
-                 "reg_subplot_position", "soil_profile", "vegetation", 
+                 "soil_profile", "vegetation", # "reg_subplot_position", 
                  "habitat_signs", "core", "ring", "canopy_analysis"))
       
       stop(paste("Unknown data type:", i, sep = " "))
@@ -84,7 +84,9 @@ read_data <- function(path, name){
                                  crowndiam2_m = as.numeric(crowndiam2_m),
                                  decayht = as.numeric(decayht),
                                  decay_wood = as.numeric(decay_wood),
-                                 decay = as.numeric(decay)))
+                                 decay = as.numeric(decay),
+                                 dbh_correction = 0,
+                                 dbh_pom = as.logical(dbh_pom)))
       }
     }
 
@@ -129,6 +131,7 @@ read_data <- function(path, name){
                           mutate(date = as.numeric(date),
                                  plotid = as.character(plotid),
                                  transect = as.numeric(transect),
+                                 transect_length_m = as.numeric(transect_length_m),
                                  species = as.character(species),
                                  dbh_mm = as.numeric(dbh_mm),
                                  decay = as.numeric(decay)))
@@ -174,19 +177,19 @@ read_data <- function(path, name){
                   
     # reg_subplot_position ----------------------------------------------------
                     
-    if(i == "reg_subplot_position"){
-                      
-      for(j in list.files(path, pattern = "*_regref.csv", full.names = T)){
-        
-        df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
-                          rename_col(.) %>%
-                          mutate(date = as.numeric(date),
-                                 plotid = as.character(plotid),
-                                 subplot_n = as.numeric(subplot_n),
-                                 x_m = as.numeric(x_m),
-                                 y_m = as.numeric(y_m)))
-      }
-    }
+    # if(i == "reg_subplot_position"){
+    #                   
+    #   for(j in list.files(path, pattern = "*_regref.csv", full.names = T)){
+    #     
+    #     df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
+    #                       rename_col(.) %>%
+    #                       mutate(date = as.numeric(date),
+    #                              plotid = as.character(plotid),
+    #                              subplot_n = as.numeric(subplot_n),
+    #                              x_m = as.numeric(x_m),
+    #                              y_m = as.numeric(y_m)))
+    #   }
+    # }
 
     # soil_profile ------------------------------------------------------------
                     
@@ -358,7 +361,7 @@ prepare_data <- function(data){
   
     # plot_id -----------------------------------------------------------------
 
-    if(i %in% c("tree", "deadwood", "regeneration", "regeneration_subplot", "reg_subplot_position", 
+    if(i %in% c("tree", "deadwood", "regeneration", "regeneration_subplot", # "reg_subplot_position", 
                 "soil_profile", "vegetation", "habitat_signs", "canopy_analysis")){
       
       data.list[[i]] <- as.data.frame(data[[i]]) %>% 

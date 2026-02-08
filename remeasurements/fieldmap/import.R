@@ -115,32 +115,32 @@ tree <- tbl(KELuser, "tree") %>%
 
 # 1. 3. regRefPoints ------------------------------------------------------
 
-regRefPoints <- tibble(plot_id = NA, subplot_n = NA, x_m = NA, y_m = NA)
-
-regRefPoints <- bind_rows(
-  regRefPoints,
-  tbl(KELuser, "reg_subplot_position") %>% filter(plot_id %in% plot.id) %>% select(-id) %>% collect()
-)
-
-coords <- data.frame(subplot_n = c(0:5),
-                     x_m = c(0.000, 0.000, 11.536, 7.130, -7.130, -11.536), 
-                     y_m = c(0.000, 12.130, 3.748, -9.813, -9.813, 3.748))
-
-x <- plot.id[!plot.id %in% regRefPoints$plot_id]
-
-subplots <- data.frame(plot_id = c(rep(x, 6))) %>% 
-  group_by(plot_id) %>%
-  mutate(subplot_n = row_number() - 1) %>%
-  inner_join(., coords, by = "subplot_n")
-
-regRefPoints <- bind_rows(regRefPoints, subplots) %>% 
-  filter(!is.na(plot_id)) %>% 
-  mutate(x_m = round(x_m, 3), 
-         y_m = round(y_m, 3))
+# regRefPoints <- tibble(plot_id = NA, subplot_n = NA, x_m = NA, y_m = NA)
+# 
+# regRefPoints <- bind_rows(
+#   regRefPoints,
+#   tbl(KELuser, "reg_subplot_position") %>% filter(plot_id %in% plot.id) %>% select(-id) %>% collect()
+# )
+# 
+# coords <- data.frame(subplot_n = c(0:5),
+#                      x_m = c(0.000, 0.000, 11.536, 7.130, -7.130, -11.536), 
+#                      y_m = c(0.000, 12.130, 3.748, -9.813, -9.813, 3.748))
+# 
+# x <- plot.id[!plot.id %in% regRefPoints$plot_id]
+# 
+# subplots <- data.frame(plot_id = c(rep(x, 6))) %>% 
+#   group_by(plot_id) %>%
+#   mutate(subplot_n = row_number() - 1) %>%
+#   inner_join(., coords, by = "subplot_n")
+# 
+# regRefPoints <- bind_rows(regRefPoints, subplots) %>% 
+#   filter(!is.na(plot_id)) %>% 
+#   mutate(x_m = round(x_m, 3), 
+#          y_m = round(y_m, 3))
 
 # 1. 4. export ------------------------------------------------------------
 
-data_import <- list("plot" = plot, "tree" = tree, "regRefPoints" = regRefPoints)         
+data_import <- list("plot" = plot, "tree" = tree) # "regRefPoints" = regRefPoints         
 
 write.xlsx(data_import, "data_import.xlsx")
 

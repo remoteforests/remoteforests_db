@@ -44,7 +44,7 @@ for (i in fr){
   data.raw$mortality <- bind_rows(data.raw$mortality, data$mortality)
   data.raw$deadwood <- bind_rows(data.raw$deadwood, data$deadwood)
   data.raw$regeneration <- bind_rows(data.raw$regeneration, data$regeneration)
-  data.raw$regeneration_subplot <- bind_rows(data.raw$regeneration_subplot, data$regeneration_subplot)
+  # data.raw$regeneration_subplot <- bind_rows(data.raw$regeneration_subplot, data$regeneration_subplot)
   # data.raw$soil <- bind_rows(data.raw$soil, data$soil)
   # data.raw$vegetation <- bind_rows(data.raw$vegetation, data$vegetation)
   # data.raw$habitat <- bind_rows(data.raw$habitat, data$habitat)
@@ -61,11 +61,12 @@ data.raw$regeneration <- data.raw$regeneration %>%
   ungroup()
 
 ## change browsing codes for reg_subplot and summarise
-data.raw$regeneration_subplot <- data.raw$regeneration_subplot %>%
-  mutate(browsing = ifelse(browsing %in% 1, 1, 6)) %>%
-  group_by(date, plotid, subplot_n, subplotsize_m2, species, htclass, browsing, regeneratedon) %>%
-  summarise(count = sum(count)) %>%
-  ungroup()
+
+# data.raw$regeneration_subplot <- data.raw$regeneration_subplot %>%
+#   mutate(browsing = ifelse(browsing %in% 1, 1, 6)) %>%
+#   group_by(date, plotid, subplot_n, subplotsize_m2, species, htclass, browsing, regeneratedon) %>%
+#   summarise(count = sum(count)) %>%
+#   ungroup()
 
 # 1. 1. 2. fieldmap -------------------------------------------------------
 
