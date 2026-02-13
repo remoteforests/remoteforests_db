@@ -226,10 +226,13 @@ ggplot(data.raw$tree) +
   theme_classic() + 
   theme(axis.text.x = element_text(angle = 90))
 
-## check if tree status needs to be adjusted according to mort_agent (manually)
 ## double check tree census! (case_when() malfunctioning)
 
 data.clean <- clean_structural_data(data = data.raw)
+
+## status 14 (16) -> decayht = 99
+
+data.clean$tree <- data.clean$tree %>% mutate(decayht = ifelse(status %in% c(14,16), 99, decayht))
 
 # 1. 4. export ------------------------------------------------------------
 
