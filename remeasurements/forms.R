@@ -68,7 +68,7 @@ plot.id <- tbl(KELuser, "plot") %>%
 
 data.form <- tbl(KELuser, "tree") %>%
   filter(plot_id %in% plot.id,
-         !treetype %in% c("m", "x", "t", "g", "r")) %>%
+         !treetype %in% c("m", "x", "t", "g", "r", "l")) %>%
   left_join(., tbl(KELuser, "species_fk") %>% select(species = id, sp_code), by = "species") %>%
   inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, plotid), by = "plot_id") %>%
   collect() %>%
