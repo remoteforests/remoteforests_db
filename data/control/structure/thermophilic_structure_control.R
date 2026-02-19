@@ -150,7 +150,7 @@ p.check <- tbl(KELuser, "tree") %>%
 data.map <- tbl(KELuser, "tree") %>%
   filter(plot_id %in% old.plot.id,
          !is.na(x_m), !is.na(y_m),
-         !treetype %in% c("m", "x", "t", "g", "r")) %>%
+         !treetype %in% c("m", "x", "t", "g", "r", "l")) %>%
   inner_join(., tbl(KELuser, "plot") %>% filter(plotid %in% p.check), by = c("plot_id" = "id")) %>%
   select(date, plotid, treen, x_m, y_m, species, status, dbh_mm) %>%
   collect() %>%

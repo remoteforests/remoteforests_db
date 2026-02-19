@@ -127,7 +127,7 @@ data.map <- tbl(KELuser, "core") %>%
   right_join(., tbl(KELuser, "tree") %>% 
                filter(plot_id %in% plot.id,
                       !is.na(x_m), !is.na(y_m),
-                      !treetype %in% c("m", "x", "t", "g", "r")), 
+                      !treetype %in% c("m", "x", "t", "g", "r", "l")), 
              by = "treeid") %>%
   inner_join(., tbl(KELuser, "plot"), by = c("plot_id" = "id")) %>%
   select(plotid, treen, x_m, y_m, species, status, dbh_mm, Cored) %>%
