@@ -37,7 +37,7 @@ paramsGetData <- function(plot.id, params){
       
       data.list$recent_dist <-  tbl(KELuser, "tree") %>%
         filter(plot_id %in% plot.id,
-               !status %in% c(0, 10, 15, 99),
+               !(status %in% 0 & integrity %in% 4) & !status %in% 99,
                growth %in% c(-1, 1),
                treetype %in% "0",
                onplot %in% c(1, 2),
@@ -288,35 +288,35 @@ paramsCalculate <- function(data, params){
                decay = ifelse(decay %in% 99, NA, decay)) %>%
         group_by(plot_id) %>%
         summarise(plotsize = first(plotsize),
-                  n_trees_live_100 = length(treeid[dbh_mm >= 100 & status %in% c(1:4)]),
-                  n_trees_live_500 = length(treeid[dbh_mm >= 500 & status %in% c(1:4)]),
-                  n_trees_live_700 = length(treeid[dbh_mm >= 700 & status %in% c(1:4)]),
-                  n_trees_dead_100 = length(treeid[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]),
-                  n_trees_dead_500 = length(treeid[dbh_mm >= 500 & status %in% c(11:13,15,17:23)]),
-                  n_trees_dead_700 = length(treeid[dbh_mm >= 700 & status %in% c(11:13,15,17:23)]),
-                  ba_live_100 = sum(ba[dbh_mm >= 100 & status %in% c(1:4)]),
+                  n_trees_live_100 = length(treeid[dbh_mm >= 100 & status %in% 1]),
+                  n_trees_live_500 = length(treeid[dbh_mm >= 500 & status %in% 1]),
+                  n_trees_live_700 = length(treeid[dbh_mm >= 700 & status %in% 1]),
+                  n_trees_dead_100 = length(treeid[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
+                  n_trees_dead_500 = length(treeid[dbh_mm >= 500 & status %in% 0 & integrity %in% c(1:3)]),
+                  n_trees_dead_700 = length(treeid[dbh_mm >= 700 & status %in% 0 & integrity %in% c(1:3)]),
+                  ba_live_100 = sum(ba[dbh_mm >= 100 & status %in% 1]),
                   ba_live_100 = ifelse(ba_live_100 %in% 0, NA, ba_live_100),
-                  ba_dead_100 = sum(ba[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]),
+                  ba_dead_100 = sum(ba[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
                   ba_dead_100 = ifelse(ba_dead_100 %in% 0, NA, ba_dead_100),
-                  dbh_max_live_100 = max(dbh_mm[dbh_mm >= 100 & status %in% c(1:4)]),
+                  dbh_max_live_100 = max(dbh_mm[dbh_mm >= 100 & status %in% 1]),
                   dbh_max_live_100 = ifelse(dbh_max_live_100 %in% -Inf, NA, dbh_max_live_100),
-                  dbh_max_dead_100 = max(dbh_mm[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]),
+                  dbh_max_dead_100 = max(dbh_mm[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
                   dbh_max_dead_100 = ifelse(dbh_max_dead_100 %in% -Inf, NA, dbh_max_dead_100),
-                  dbh_mean_live_100 = mean(dbh_mm[dbh_mm >= 100 & status %in% c(1:4)]),
+                  dbh_mean_live_100 = mean(dbh_mm[dbh_mm >= 100 & status %in% 1]),
                   dbh_mean_live_100 = ifelse(dbh_mean_live_100 %in% "NaN", NA, dbh_mean_live_100),
-                  dbh_mean_dead_100 = mean(dbh_mm[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]),
+                  dbh_mean_dead_100 = mean(dbh_mm[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
                   dbh_mean_dead_100 = ifelse(dbh_mean_dead_100 %in% "NaN", NA, dbh_mean_dead_100),
-                  dbh_quadrmean_live_100 = sqrt(mean(dbh_mm[dbh_mm >= 100 & status %in% c(1:4)]^2)),
+                  dbh_quadrmean_live_100 = sqrt(mean(dbh_mm[dbh_mm >= 100 & status %in% 1]^2)),
                   dbh_quadrmean_live_100 = ifelse(dbh_quadrmean_live_100 %in% "NaN", NA, dbh_quadrmean_live_100),
-                  dbh_quadrmean_dead_100 = sqrt(mean(dbh_mm[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]^2)),
+                  dbh_quadrmean_dead_100 = sqrt(mean(dbh_mm[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]^2)),
                   dbh_quadrmean_dead_100 = ifelse(dbh_quadrmean_dead_100 %in% "NaN", NA, dbh_quadrmean_dead_100),
-                  dbh_gini_live_100 = ineq(dbh_mm[dbh_mm >= 100 & status %in% c(1:4)], type = "Gini"),
+                  dbh_gini_live_100 = ineq(dbh_mm[dbh_mm >= 100 & status %in% 1], type = "Gini"),
                   dbh_gini_live_100 = ifelse(dbh_gini_live_100 %in% "NaN", NA, dbh_gini_live_100),
-                  dbh_gini_dead_100 = ineq(dbh_mm[dbh_mm >= 100 & status %in% c(11:13,15,17:23)], type = "Gini"),
+                  dbh_gini_dead_100 = ineq(dbh_mm[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)], type = "Gini"),
                   dbh_gini_dead_100 = ifelse(dbh_gini_dead_100 %in% "NaN", NA, dbh_gini_dead_100),
-                  dbh_div_live_100 = sd(dbh_mm[dbh_mm >= 100 & status %in% c(1:4)]),
-                  dbh_div_dead_100 = sd(dbh_mm[dbh_mm >= 100 & status %in% c(11:13,15,17:23)]),
-                  decay_div_standing_100 = sd(decay[dbh_mm >= 100 & status %in% c(11:13,15,17:23)], na.rm = T)) %>%
+                  dbh_div_live_100 = sd(dbh_mm[dbh_mm >= 100 & status %in% 1]),
+                  dbh_div_dead_100 = sd(dbh_mm[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
+                  decay_div_standing_100 = sd(decay[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)], na.rm = T)) %>%
         mutate_at(vars(n_trees_live_100,
                        n_trees_live_500,
                        n_trees_live_700, 
@@ -352,7 +352,7 @@ paramsCalculate <- function(data, params){
       
       data.params$dominant_species <- data$tree %>%
         filter(dbh_mm >= dbh_min,
-               status %in% c(1:4)) %>%
+               status %in% 1) %>%
         mutate(ba = pi * dbh_mm ^ 2 / 4 / 1000000) %>%
         group_by(plot_id, species) %>%
         summarise(ba = sum(ba) * 10000 / first(plotsize)) %>%
@@ -366,7 +366,7 @@ paramsCalculate <- function(data, params){
         
       data.params$biomass_volume_live <- data$tree %>%
         filter(dbh_mm >= dbh_min,
-               status %in% c(1:4),
+               status %in% 1,
                !species %in% "99") %>%
         left_join(., data$wood_density %>% distinct(., species, density_gCm3), by = "species") %>%
         left_join(., data$biomass_eq, by = "species") %>%
@@ -397,7 +397,8 @@ paramsCalculate <- function(data, params){
       
       data.params$volume_dead_standing <- data$tree %>%
         filter(dbh_mm >= dbh_min,
-               status %in% c(11:13,15,17:23),
+               status %in% 0,
+               integrity %in% c(1:3),
                !decayht %in% 99) %>%
         mutate(decayht = case_when(
           decayht %in% 0 ~ 5,
@@ -423,7 +424,8 @@ paramsCalculate <- function(data, params){
       
       data.params$biomass_dead_standing <- data$tree %>%
         filter(dbh_mm >= dbh_min,
-               status %in% c(11:13,15,17:23),
+               status %in% 0,
+               integrity %in% c(1:3),
                !decayht %in% 99,
                !species %in% "99",
                (decay_wood %in% c(1:5) | decay %in% c(1:5))) %>%
@@ -688,19 +690,18 @@ paramsCalculate <- function(data, params){
                onplot = first(onplot[!onplot %in% 99]),
                x_m = first(x_m[!is.na(x_m)]),
                y_m = first(y_m[!is.na(y_m)]),
-               status_group = ifelse(status %in% c(1:4), 1, 0),
-               status_group = ifelse(status %in% 99, NA, status_group),
-               status_group = case_when(
-                 is.na(status_group) & lead(status_group, 1) %in% 0 ~ 0,
-                 is.na(status_group) & lag(status_group, 1) %in% 1 ~ 1,
-                 .default = status_group),
-               status_group = case_when(
-                 is.na(status_group) & lead(status_group, 1) %in% 0 ~ 0,
-                 is.na(status_group) & lag(status_group, 1) %in% 1 ~ 1,
-                 .default = status_group),
-               status_group = ifelse(row_number() == 2 & status_group %in% c(0, NA) & lag(status_group, 1) %in% 1, 1, status_group),
-               status_group = ifelse(row_number() == 3 & status_group %in% c(0, NA) & lag(status_group, 1) %in% 1, 1, status_group),
-               status_na = ifelse(is.na(status_group), 1, 0),
+               status = ifelse(status %in% 99, NA, status),
+               status = case_when(
+                 is.na(status) & lead(status, 1) %in% 0 ~ 0,
+                 is.na(status) & lag(status, 1) %in% 1 ~ 1,
+                 .default = status),
+               status = case_when(
+                 is.na(status) & lead(status, 1) %in% 0 ~ 0,
+                 is.na(status) & lag(status, 1) %in% 1 ~ 1,
+                 .default = status),
+               status = ifelse(row_number() == 2 & status %in% c(0, NA) & lag(status, 1) %in% 1, 1, status),
+               status = ifelse(row_number() == 3 & status %in% c(0, NA) & lag(status, 1) %in% 1, 1, status),
+               status_na = ifelse(is.na(status), 1, 0),
                status_na = max(status_na, na.rm = T),
                dbh_mm = case_when(
                  is.na(dbh_mm) & row_number() == 1 ~ first(dbh_mm[!is.na(dbh_mm)]),
@@ -711,16 +712,16 @@ paramsCalculate <- function(data, params){
                !is.na(dbh_mm)) %>%
         mutate(
           dbh_mm = case_when(
-            row_number() == 2 & status_group %in% 0 & lag(status_group, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
-            row_number() == 2 & status_group %in% 1 & lag(status_group, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
+            row_number() == 2 & status %in% 0 & lag(status, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
+            row_number() == 2 & status %in% 1 & lag(status, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
             .default = dbh_mm),
           dbh_mm = case_when(
-            row_number() == 3 & status_group %in% 0 & lag(status_group, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
-            row_number() == 3 & status_group %in% 1 & lag(status_group, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
+            row_number() == 3 & status %in% 0 & lag(status, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
+            row_number() == 3 & status %in% 1 & lag(status, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
             .default = dbh_mm)) %>%
         filter(treetype %in% "0",
                !onplot %in% c(0, NA),
-               status_group %in% 1) %>% 
+               status %in% 1) %>% 
         inner_join(., data$mort_plot, by = c("plot_id", "date")) %>%
         mutate(distance_m = sqrt(abs(x_m^2) + abs(y_m^2)),
                dbh_threshold = ifelse(dbh_mm >= dbh_min, 1, 0),
