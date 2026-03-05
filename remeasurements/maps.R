@@ -133,8 +133,8 @@ data.map <- tbl(KELuser, "core") %>%
   select(plotid, treen, x_m, y_m, species, status, dbh_mm, Cored) %>%
   arrange(plotid, treen) %>%
   collect() %>%
-  mutate(status = ifelse(status %in% c(1:4), "alive", status),
-         status = ifelse(status %in% c(0, 10:30), "dead", status),
+  mutate(status = ifelse(status %in% 1, "alive", status),
+         status = ifelse(status %in% 0, "dead", status),
          species = ifelse(
            species %in% c("Acer",
                           "Acer campestre",
