@@ -59,7 +59,7 @@ upload_data(data.prepared)
 
 # 2. DENDROCHRONOLOGICAL DATA ---------------------------------------------
 
-path <- "C:/Users/Ondrej_Vostarek/Desktop/KEL/db/data/dendrolab/new/clean"
+path <- "data/control/out"
 
 # 2. 1. core --------------------------------------------------------------
 
