@@ -5,6 +5,8 @@ read_core_data <- function(file){
   core <- read.xlsx(file)
     
   if(!identical(c("treeid", "species", "corestatus", "circle", "n_circle", "crossdated", "cormach", "mortality_date"), 
+                names(core)) & 
+     !identical(c("treeid", "stem", "species", "corestatus", "circle", "n_circle", "crossdated", "cormach", "mortality_date"), 
                 names(core))) 
     
     stop("Core data do not match with required table format.")
@@ -124,7 +126,8 @@ clean_dendrochronological_data <- function(data, coretype){
     mutate(subcore = "a",
            coreht_m = 1,
            missing_years = round(missing_mm / incr_mean, 0),
-           coretype = coretype) %>%
+           coretype = coretype,
+           mortality_date = ifelse(coretype %in% 1, NA, mortality_date)) %>%
     select(date, treeid, subcore, coreht_m, missing_mm, missing_years, 
            corestatus, crossdated, coretype, cormach, mortality_date)
   

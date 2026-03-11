@@ -256,7 +256,7 @@ read_data <- function(path, name){
     
     if(i == "core"){
                           
-      for(j in list.files(path, pattern = "*_core.csv", full.names = T)){
+      for(j in list.files(path, pattern = "*_core_clean.csv", full.names = T)){
         
         df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
                           rename_col(.) %>%
@@ -276,7 +276,7 @@ read_data <- function(path, name){
 
     if(i == "ring"){
       
-      for(j in list.files(path, pattern = "*_ring.csv", full.names = T)){
+      for(j in list.files(path, pattern = "*_ring_clean.csv", full.names = T)){
         
         df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
                           rename_col(.) %>%
