@@ -17,9 +17,9 @@ read_data <- function(path, name){
   for (i in name) {
     
     if(!i %in% c("plot", "tree", "mortality", "microsites",
-                 "deadwood","regeneration", "regeneration_subplot",
-                 "soil_profile", "vegetation", # "reg_subplot_position", 
-                 "habitat_signs", "core", "ring", "canopy_analysis"))
+                 "deadwood", "regeneration", # "reg_subplot_position",
+                 "soil_profile", "vegetation", "habitat_signs",
+                 "core", "ring", "canopy_analysis"))
       
       stop(paste("Unknown data type:", i, sep = " "))
     
@@ -148,33 +148,16 @@ read_data <- function(path, name){
                           rename_col(.) %>%
                           mutate(date = as.numeric(date),
                                  plotid = as.character(plotid),
+                                 subplot = as.numeric(subplot),
+                                 sampledarea_m2 = as.numeric(sampledarea_m2),
                                  species = as.character(species),
-                                 htclass = as.numeric(htclass),
+                                 heightclass = as.numeric(heightclass),
+                                 browsing = as.numeric(browsing),
                                  regeneratedon = as.numeric(regeneratedon),
                                  count = as.numeric(count)))
       }
     }          
                 
-    # regeneration_subplot ----------------------------------------------------
-
-    if(i == "regeneration_subplot"){
-                    
-      for(j in list.files(path, pattern = "*_regeneration_subplot.csv", full.names = T)){
-        
-        df <- bind_rows(df, read.table(j, sep = ",", header = T, stringsAsFactors = F) %>%
-                          rename_col(.) %>%
-                          mutate(date = as.numeric(date),
-                                 plotid = as.character(plotid),
-                                 subplot_n = as.numeric(subplot_n),
-                                 subplotsize_m2 = as.numeric(subplotsize_m2),
-                                 species = as.character(species),
-                                 htclass = as.numeric(htclass),
-                                 browsing = as.numeric(browsing),
-                                 regeneratedon = as.numeric(regeneratedon),
-                                 count = as.numeric(count)))
-      }
-    }
-                  
     # reg_subplot_position ----------------------------------------------------
                     
     # if(i == "reg_subplot_position"){
@@ -361,7 +344,7 @@ prepare_data <- function(data){
   
     # plot_id -----------------------------------------------------------------
 
-    if(i %in% c("tree", "deadwood", "regeneration", "regeneration_subplot", # "reg_subplot_position", 
+    if(i %in% c("tree", "deadwood", "regeneration", # "reg_subplot_position", 
                 "soil_profile", "vegetation", "habitat_signs", "canopy_analysis")){
       
       data.list[[i]] <- as.data.frame(data[[i]]) %>% 

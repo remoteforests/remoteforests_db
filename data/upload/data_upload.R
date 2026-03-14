@@ -31,7 +31,6 @@ name <- c(
   "tree",
   "deadwood",
   "regeneration",
-  "regeneration_subplot",
   # "reg_subplot_position",
   "soil_profile",
   "vegetation",
