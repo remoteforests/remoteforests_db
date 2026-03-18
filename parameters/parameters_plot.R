@@ -17,8 +17,8 @@ source("pw.R")
 
 source("parameters/parameters_fc.R")
 
-plot.id <- tbl(KELuser, "plot") %>% 
-  filter(ownership %in% 1,
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(ownership %in% c(1, 2),
          !plottype %in% c(10, 99)) %>%
   pull(id)
 
