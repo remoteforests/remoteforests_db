@@ -101,7 +101,7 @@ paramsGetData <- function(plot.id, params){
       data.list$deadwood <- tbl(KELuser, "deadwood") %>% 
         inner_join(., tbl(KELuser, "plot") %>% filter(id %in% plot.id), by = c("plot_id" = "id")) %>%
         filter((date < 2014 & dbh_mm >= 100) | (date >= 2014 & dbh_mm >= 60)) %>%
-        select(plot_id, species, dbh_mm, decay) %>%
+        select(plot_id, transect_length_m, species, dbh_mm, decay) %>%
         collect()
       
       data.list$wood_density <- tbl(KELuser, "wood_density") %>% select(-id) %>% collect()
@@ -567,14 +567,14 @@ paramsCalculate <- function(data, params){
         filter(!decay %in% 99,
                dbh_mm >= 100) %>%
         group_by(plot_id, decay) %>%
-        summarise(volume_cwd = round(((pi^2 * sum((dbh_mm * 0.001)^2)) / 800) * 10000, 0)) %>%
+        summarise(volume_cwd = round(((pi^2 * sum((dbh_mm * 0.001)^2)) / (8 * (5 * first(transect_length_m)))) * 10000, 0)) %>%
         ungroup() %>%
         mutate(decay = paste0("volume_dead_lying_100_decay", decay)) %>%
         spread(., decay, volume_cwd, fill = 0)
             
       data.params$volume_dead_lying <- data$deadwood %>%
         group_by(plot_id) %>%
-        summarise(volume_dead_lying_100 = round(((pi^2 * sum((dbh_mm[dbh_mm >= 100] * 0.001)^2)) / 800) * 10000, 0))
+        summarise(volume_dead_lying_100 = round(((pi^2 * sum((dbh_mm[dbh_mm >= 100] * 0.001)^2)) / (8 * (5 * first(transect_length_m)))) * 10000, 0))
       
       data.params$biomass_dead_lying_100 <- data$deadwood %>%
         filter(!decay %in% 99,
@@ -582,7 +582,7 @@ paramsCalculate <- function(data, params){
                dbh_mm >= 100) %>%
         left_join(., data$wood_density, by = c("species", "decay" = "decay_class")) %>%
         group_by(plot_id, decay, species) %>%
-        summarise(volume_cwd = ((pi^2 * sum((dbh_mm * 0.001)^2)) / 800) * 10000,
+        summarise(volume_cwd = ((pi^2 * sum((dbh_mm * 0.001)^2)) / (8 * (5 * first(transect_length_m)))) * 10000,
                   biomass = volume_cwd * (first(density_gCm3) * first(relative_density) * 1000)) %>%
         group_by(plot_id) %>%
         summarise(biomass_dead_lying_100 = round(sum(biomass), 0))
