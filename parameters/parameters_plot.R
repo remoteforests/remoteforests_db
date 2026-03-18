@@ -30,7 +30,6 @@ params <- c(
   "deadwood",
   "deadwood_tree",
   "regeneration",
-  "regeneration_subplot",
   "canopy",
   "mortality",
   "temperature"

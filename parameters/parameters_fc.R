@@ -8,8 +8,8 @@ paramsGetData <- function(plot.id, params){
   for (i in params){
     
     if(!i %in% c("plot","tree","core","disturbance","deadwood","deadwood_tree",
-                 "regeneration","regeneration_subplot", "canopy","mortality",
-                 "temperature")) stop(paste("Unknown params:", i, sep = " "))
+                 "regeneration", "canopy","mortality", "temperature"))
+      stop(paste("Unknown params:", i, sep = " "))
 
     # plot --------------------------------------------------------------------
 
@@ -130,22 +130,11 @@ paramsGetData <- function(plot.id, params){
 
     if(i == "regeneration"){
       
-      data.list$regeneration <- tbl(KELuser, "regeneration") %>% 
-        inner_join(., tbl(KELuser, "plot") %>%
-                     filter(id %in% plot.id,
-                            !is.na(plotsize)),
-                   by = c("plot_id" = "id")) %>%
-        select(plot_id, plotsize, dbh_min, htclass, count) %>%
-        collect()
-    }
-
-    # regeneration_subplot ----------------------------------------------------
-
-    if(i == "regeneration_subplot"){
-      
-      data.list$regeneration_subplot <- tbl(KELuser, "regeneration_subplot") %>% 
+      data.list$regeneration <- tbl(KELuser, "regeneration") %>%
         filter(plot_id %in% plot.id) %>%
-        select(plot_id, htclass, browsing, count) %>% 
+        inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, dbh_min),
+                   by = "plot_id") %>%
+        select(plot_id, subplot, sampledarea_m2, dbh_min, heightclass, browsing, count) %>%
         collect()
     }
 
@@ -243,8 +232,8 @@ paramsCalculate <- function(data, params){
   for (i in params){
     
     if(!i %in% c("plot","tree","core","disturbance","deadwood","deadwood_tree",
-                 "regeneration","regeneration_subplot", "canopy","mortality",
-                 "temperature")) stop(paste("Unknown params:", i, sep = " "))
+                 "regeneration", "canopy","mortality", "temperature"))
+      stop(paste("Unknown params:", i, sep = " "))
     
     # plot --------------------------------------------------------------------
 
@@ -631,33 +620,34 @@ paramsCalculate <- function(data, params){
 
     if(i == "regeneration"){
                   
-      data.params$regeneration_htclass <- data$regeneration %>%
-        #mutate(plotsize = ifelse(plotsize > 1000, 1000, plotsize)) %>%
+      data.params$regeneration_0_50 <- data$regeneration %>%
+        filter(heightclass %in% 0) %>%
         group_by(plot_id) %>%
-        summarise(regeneration_50_130 = sum(count[htclass %in% 1]) * 10000 / first(plotsize),
-                  regeneration_130_250 = sum(count[htclass %in% 2]) * 10000 / first(plotsize)) %>%
+        summarise(regeneration_0_50 = ifelse(first(subplot) %in% -1,
+                                             round(sum(count) * 10000 / first(sampledarea_m2), 0),
+                                             round(sum(count) * 10000 / (5 * first(sampledarea_m2)), 0)))
+      
+      data.params$regeneration_heightclass <- data$regeneration %>%
+        filter(subplot %in% -1 & !heightclass %in% 0) %>%
+        group_by(plot_id) %>%
+        summarise(regeneration_50_130 = sum(count[heightclass %in% 1]) * 10000 / first(sampledarea_m2),
+                  regeneration_130_250 = sum(count[heightclass %in% 2]) * 10000 / first(sampledarea_m2)) %>%
         mutate_at(vars(-plot_id), list(~ round(., 0)))
                   
       data.params$regeneration_250_dbh_min <- data$regeneration %>%
-        mutate(#plotsize = ifelse(plotsize > 1000, 1000, plotsize),
-               dbh_min = paste("regeneration_250", dbh_min, sep = "_")) %>%
+        filter(subplot %in% -1 & !heightclass %in% 0) %>%
+        mutate(dbh_min = paste("regeneration_250", dbh_min, sep = "_")) %>%
         group_by(plot_id, dbh_min) %>%
-        summarise(regeneration_250_dbh_min = round(sum(count[htclass %in% 3]) * 10000 / first(plotsize), 0)) %>%
+        summarise(regeneration_250_dbh_min = round(sum(count[heightclass %in% 3]) * 10000 / first(sampledarea_m2), 0)) %>%
         spread(dbh_min, regeneration_250_dbh_min, fill = NA)
-    }
-
-    # regeneration_subplot ----------------------------------------------------
-       
-    if(i == "regeneration_subplot"){
-                    
-      data.params$regeneration_0_50 <- data$regeneration_subplot %>%
+      
+      data.params$regeneration_browsing <- data$regeneration %>%
         group_by(plot_id) %>%
-        summarise(regeneration_0_50 = round(sum(count[htclass %in% 0]) * 10000 / 20, 0))
-                    
-      data.params$regeneration_browsing <- data$regeneration_subplot %>%
-        filter(htclass %in% 1,
-              !browsing %in% c(5, 99)) %>%
-        group_by(plot_id) %>%
+        mutate(use = ifelse(browsing %in% 6, 0, 1),
+               use = min(use)) %>%
+        filter(heightclass %in% 1,
+               !browsing %in% c(5, 99),
+               use %in% 1) %>%
         summarise(regeneration_browsing = round(mean(browsing), 0))
     }
 
