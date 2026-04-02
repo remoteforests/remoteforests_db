@@ -359,7 +359,6 @@ paramsCalculate <- function(data, params){
                !species %in% "99") %>%
         left_join(., data$wood_density %>% distinct(., species, density_gCm3), by = "species") %>%
         left_join(., data$biomass_eq, by = "species") %>%
-        left_join(., data.params$tree_params %>% select(plot_id, ba = ba_live_100), by = "plot_id") %>%
         rowwise() %>%
         mutate(RM = eval(parse(text = root_mass_f)),
                SM = eval(parse(text = stem_mass_f)),
