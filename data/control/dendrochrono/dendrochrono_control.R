@@ -25,7 +25,7 @@ for (i in fk$tablename){
 # 1. DENDROCHRONOLOGICAL DATA ---------------------------------------------
 
 sampling.date <- 2024
-country <- "CRO"
+country <- "SLV"
 coretype <- 1 # 1 = "regular", 2 = "mortality"
 
 # 1. 1. read --------------------------------------------------------------
@@ -61,21 +61,6 @@ for (i in fh){
   remove(ring)
   
 }
-
-# 1. 1. X. treeid - thermophilic ------------------------------------------
-
-data.raw$ring <- data.raw$ring %>%
-  left_join(., data.raw$core %>%
-              select(treeid, stem),
-            by = "treeid") %>%
-  mutate(stem = ifelse(is.na(stem), substr(treeid, 18, 18), stem),
-         treeid = ifelse(nchar(treeid) == 18, substr(treeid, 1, 17), treeid),
-         treeid = paste(treeid, stem, sep = "_")) %>%
-  select(-stem)
-
-data.raw$core <- data.raw$core %>%
-  mutate(treeid = paste(treeid, stem, sep = "_")) %>%
-  select(-stem)
 
 # 1. 1. 3. database -------------------------------------------------------
 

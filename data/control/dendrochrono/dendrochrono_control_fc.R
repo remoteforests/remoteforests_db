@@ -5,8 +5,6 @@ read_core_data <- function(file){
   core <- read.xlsx(file)
     
   if(!identical(c("treeid", "species", "corestatus", "circle", "n_circle", "crossdated", "cormach", "mortality_date"), 
-                names(core)) & 
-     !identical(c("treeid", "stem", "species", "corestatus", "circle", "n_circle", "crossdated", "cormach", "mortality_date"), 
                 names(core))) 
     
     stop("Core data do not match with required table format.")
