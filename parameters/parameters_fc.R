@@ -28,7 +28,8 @@ paramsGetData <- function(plot.id, params){
         filter(plot_id %in% plot.id,
                !onplot %in% c(0, 99)) %>%
         inner_join(., tbl(KELuser, "plot"), by = c("plot_id" = "id")) %>%
-        select(plot_id, plotsize, dbh_min, treeid, species, dbh_mm, height_m, status, decay, decayht, decay_wood) %>%
+        select(plot_id, plotsize, dbh_min, treeid, species, dbh_mm, height_m, 
+               status, integrity, decay, decayht, decay_wood) %>%
         collect()
       
       data.list$wood_density <- tbl(KELuser, "wood_density") %>% select(-id) %>% collect()
