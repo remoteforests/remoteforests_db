@@ -33,7 +33,15 @@ begin
     end;
   end;
   
-  if (Trees['DBH_mm'] = NULL) and not(Trees['status'] in [0, 10, 14, 16]) then begin
+  if (Trees['pom'] = NULL) then begin
+    n_err := n_err + 1;
+    //arr_err_mess[n_err] := 'Error: Tree DBH should be filled!';
+    if (n_err < 4) then begin
+      showerror('Error: Tree DBH point of measurement should be filled!');
+    end;
+  end;
+  
+  if (Trees['DBH_mm'] = NULL) and not(Trees['integrity'] in [4, 5]) then begin
     n_err := n_err + 1;
     //arr_err_mess[n_err] := 'Error: Tree DBH should be filled!';
     if (n_err < 4) then begin
@@ -42,7 +50,7 @@ begin
   end;
   
   // Errors for alive trees
-  if (Trees['status'] in [1, 2, 3, 4]) then begin
+  if (Trees['status'] in [1]) then begin
   
     if (Trees['growth'] = NULL) then begin
       n_err := n_err + 1;
@@ -63,7 +71,7 @@ begin
   end;
   
   // Errors for dead trees
-  if not(Trees['status'] in [1, 2, 3, 4]) then begin
+  if (Trees['status'] in [0]) then begin
   
     if (Trees['decay'] = NULL) then begin
       n_err := n_err + 1;
@@ -89,7 +97,7 @@ begin
       end;
     end;
     
-    if (Trees_old['status_old'] in [1, 2, 3, 4]) and (Mortality['mort_agent'] = NULL) then begin
+    if (Trees_old['status_old'] in [1]) and (Mortality['mort_agent'] = NULL) then begin
       n_err := n_err + 1;
       //arr_err_mess[n_err] := 'Error: Mortality agent should be filled!';
       if (n_err < 4) then begin
@@ -110,7 +118,7 @@ begin
     
   end else begin
   
-    if (Trees_old['status_old'] in [1, 2, 3, 4]) and not(Trees['status'] in [1, 2, 3, 4]) then begin
+    if (Trees_old['status_old'] in [1]) and (Trees['status'] in [0]) then begin
       Trees['RGB'] := '255,0,255';
       Trees['measured'] := 1;
       showmsg('Mortality tree - should be cored!');

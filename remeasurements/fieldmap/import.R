@@ -9,10 +9,23 @@ library(tidyverse) # 2.0.0 (dplyr 1.1.4, forcats 1.0.0, ggplot2 3.5.1, lubridate
 
 source("pw.R")
 
-## CRO 2025
+## ALB 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(country %in% "Croatia",
+  filter(country %in% "Albania",
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## BOS 2026
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(country %in% "Bosnia",
          foresttype %in% "beech",
+         !plottype %in% 11,
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
@@ -22,9 +35,10 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## ROM 2025
+## ROM 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(stand %in% c("Criva", "Paulic"),
+  filter(stand %in% c("Bistra valley", "Cajmrsk", "Cocos-Dragus", "Giumalau"),
+         !census %in% 1,
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
@@ -34,22 +48,9 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## SLO 2025
+## AUT_T 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Poloniny", "Vihorlat"),
-         !date %in% 2022,
-         !is.na(lng), !is.na(lat)) %>%
-  collect() %>%
-  group_by(plotid) %>%
-  arrange(desc(date), .by_group = T) %>%
-  filter(row_number() == 1) %>%
-  ungroup() %>%
-  distinct(., id) %>% 
-  pull(id)
-
-## SLO_T 2025
-plot.id <- tbl(KELuser, "plot") %>%
-  filter(stand %in% c("Kolienec", "Ploska"),
+  filter(country %in% "Austria",
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
@@ -82,12 +83,13 @@ tree <- tbl(KELuser, "tree") %>%
          x_m = round(x_m, 3),
          y_m = round(y_m, 3),
          status = ifelse(status %in% 99, NA, status),
+         integrity = ifelse(integrity %in% 99, NA, integrity),
          growth = ifelse(growth %in% c(-1, 99), NA, growth),
          layer = ifelse(layer %in% c(-1, 99), NA, layer),
          decay = ifelse(decay %in% c(-1, 99), NA, decay),
          decay_wood = ifelse(decay_wood %in% c(-1, 99), NA, decay_wood),
          decayht = ifelse(decayht %in% c(-1, 99), NA, decayht)) %>%
-  select(plot_id, treen, x_m, y_m, dbh_mm, species, status, growth, layer, decay, decay_wood, decayht) %>%
+  select(plot_id, treen, x_m, y_m, dbh_mm, species, status, integrity, growth, layer, decay, decay_wood, decayht) %>%
   collect() %>%
   inner_join(., sp.lookup, by = c("species" = "value")) %>%
   mutate(species = id) %>%

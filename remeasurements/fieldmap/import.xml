@@ -15,6 +15,7 @@
     <ATTRIB NAME="Z_m" SOURCEATTRIB="CONST 0"/>
     <ATTRIB NAME="Species" SOURCEATTRIB="species"/>
     <ATTRIB NAME="status" SOURCEATTRIB="status"/>
+    <ATTRIB NAME="integrity" SOURCEATTRIB="integrity"/>
   </LAYER>
 
   <LAYER NAME="Trees_old" FILE="data_import.xlsx\tree$" PLOTID="plot_id" ID="treen">
@@ -24,15 +25,12 @@
     <ATTRIB NAME="species_old" SOURCEATTRIB="species"/>
     <ATTRIB NAME="dbh_old" SOURCEATTRIB="dbh_mm"/>
     <ATTRIB NAME="status_old" SOURCEATTRIB="status"/>
+    <ATTRIB NAME="integrity_old" SOURCEATTRIB="integrity"/>
     <ATTRIB NAME="growth_old" SOURCEATTRIB="growth"/>
     <ATTRIB NAME="layer_old" SOURCEATTRIB="layer"/>
     <ATTRIB NAME="decay_old" SOURCEATTRIB="decay"/>
     <ATTRIB NAME="decay_wood_old" SOURCEATTRIB="decay_wood"/>
     <ATTRIB NAME="decayht_old" SOURCEATTRIB="decayht"/>
-  </LAYER>
-
-  <LAYER NAME="RegRefPoints" FILE="data_import.xlsx\regRefPoints$" PLOTID="plot_id" ID="subplot_n" X="x_m" Y="y_m">
-    <ATTRIB NAME="Z_m" SOURCEATTRIB="CONST 0"/>
   </LAYER>
 
 </FIELDMAP>

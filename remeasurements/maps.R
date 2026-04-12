@@ -11,10 +11,23 @@ source("pw.R")
 year <- "" # insert year of remeasurement
 area <- "" # insert abbreviation of remeasured area
 
-## CRO 2025
+## ALB 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(country %in% "Croatia",
+  filter(country %in% "Albania",
+         !is.na(lng), !is.na(lat)) %>%
+  collect() %>%
+  group_by(plotid) %>%
+  arrange(desc(date), .by_group = T) %>%
+  filter(row_number() == 1) %>%
+  ungroup() %>%
+  distinct(., id) %>% 
+  pull(id)
+
+## BOS 2026
+plot.id <- tbl(KELuser, "plot") %>%
+  filter(country %in% "Bosnia",
          foresttype %in% "beech",
+         !plottype %in% 11,
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
@@ -24,9 +37,10 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## ROM 2025
+## ROM 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(stand %in% c("Criva", "Paulic"),
+  filter(stand %in% c("Bistra valley", "Cajmrsk", "Cocos-Dragus", "Giumalau"),
+         !census %in% 1,
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%
@@ -36,22 +50,9 @@ plot.id <- tbl(KELuser, "plot") %>%
   distinct(., id) %>% 
   pull(id)
 
-## SLO 2025
+## AUT_T 2026
 plot.id <- tbl(KELuser, "plot") %>%
-  filter(location %in% c("Poloniny", "Vihorlat"),
-         !date %in% 2022,
-         !is.na(lng), !is.na(lat)) %>%
-  collect() %>%
-  group_by(plotid) %>%
-  arrange(desc(date), .by_group = T) %>%
-  filter(row_number() == 1) %>%
-  ungroup() %>%
-  distinct(., id) %>% 
-  pull(id)
-
-## SLO_T 2025
-plot.id <- tbl(KELuser, "plot") %>%
-  filter(stand %in% c("Kolienec", "Ploska"),
+  filter(country %in% "Austria",
          !is.na(lng), !is.na(lat)) %>%
   collect() %>%
   group_by(plotid) %>%

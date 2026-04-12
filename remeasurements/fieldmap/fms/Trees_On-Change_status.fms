@@ -9,13 +9,13 @@ begin
   
   Trees['s_mort_vis'] := 0;
   
-  if(Trees_old['status_old'] in [1, 2, 3, 4]) and not(Trees['status'] in [1, 2, 3, 4]) then begin
+  if(Trees_old['status_old'] in [1]) and (Trees['status'] in [0]) then begin
     Trees['s_mort_vis'] := 1;
   end;
 
   // Visibility of tree attributes
   
-  vis := Trees['status'] in [1, 2, 3, 4];
+  vis := Trees['status'] in [1];
   
   Trees.Visible['growth'] := vis;
   Trees.Visible['layer'] := vis;
