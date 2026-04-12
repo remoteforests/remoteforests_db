@@ -35,51 +35,49 @@ species <- tbl(KELuser, "tree") %>%
 
 # 1. 4. status ------------------------------------------------------------
 
-status <- data.frame(id = c(0:4, 10:17, 21:23),
-                     value = c("0 - stump < 1.3 m (harvested)",
-                               "1 - alive - full",
-                               "2 - alive - crown breakage",
-                               "3 - alive - stem breakage (> 1.3 m)",
-                               "4 - alive - uprooted",
-                               "10 - stump < 1.3 m (natural)",
-                               "11 - dead - full",
-                               "12 - dead - crown breakage",
-                               "13 - dead - stem breakage (> 1.3 m)",
-                               "14 - dead - uprooted while alive",
-                               "15 - dead - competition",
-                               "16 - dead - uprooted while dead",
-                               "17 - dead - top breakage (less than 12 - crown breakage)",
-                               "21 - recently dead (large-scale disturbance) - full",
-                               "22 - recently dead (large-scale disturbance) - crown breakage",
-                               "23 - recently dead (large-scale distrubance) - stem breakage"))
+status <- data.frame(id = c(0, 1),
+                     value = c("0 - dead",
+                               "1 - alive"))
 
-# 1. 5. growth ------------------------------------------------------------
+# 1. 5. integrity ---------------------------------------------------------
+
+integrity <- data.frame(id = c(1, 2, 3, 4, 5),
+                     value = c("1 - full",
+                               "2 - crown breakage",
+                               "3 - stem breakage (tree height >= 1.3 m)",
+                               "4 - stump (tree height < 1.3 m)",
+                               "5 - uprooted"))
+
+# 1. 6. growth ------------------------------------------------------------
 
 growth <- data.frame(id = c(0:1),
                      value = c("suppressed", "released"))
 
-# 1. 6. layer -------------------------------------------------------------
+# 1. 7. layer -------------------------------------------------------------
 
 layer <- data.frame(id = c(11:13),
                     value = c("upper", "mid", "lower"))
 
-# 1. 7. decay -------------------------------------------------------------
+# 1. 8. decay -------------------------------------------------------------
 
 decay <- data.frame(id = c(1:5),
                     value = c(1:5))
 
-# 1. 8. decayht -----------------------------------------------------------
+# 1. 9. decayht -----------------------------------------------------------
 
-decayht <- data.frame(id = c(0:6),
+decayht <- data.frame(id = c(0:9),
                       value = c("0.0 - 9.9 m",
                                 "10.0 - 19.9 m",
                                 "20.0 - 29.9 m",
                                 "30.0 - 39.9 m",
                                 "40.0 - 49.9 m",
                                 "50.0 - 59.9 m",
-                                "60.0 - 69.9 m"))
+                                "60.0 - 69.9 m",
+                                "70.0 - 79.9 m",
+                                "80.0 - 89.9 m",
+                                "90.0 - 99.9 m"))
 
-# 1. 9. mortality ---------------------------------------------------------
+# 1. 10. mortality ---------------------------------------------------------
 
 mort <- data.frame(id = c(0, 111:113, 121:123, 131:133, 141:143, 15:17, 21, 31, 411:413, 42, 51, 61, 71),
                    value = c("0 - no clear cause (max 2 trees per plot)",
@@ -108,42 +106,36 @@ mort <- data.frame(id = c(0, 111:113, 121:123, 131:133, 141:143, 15:17, 21, 31, 
                              "61 - significant damage by game",
                              "71 - logging"))
 
-mort.status <- bind_rows(
-  mort %>% filter(id %in% 71) %>% mutate(status = 0) %>% select(status, id, value),
-  mort %>% filter(id %in% c(121:123, 131:133, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 10) %>% select(status, id, value),
-  mort %>% filter(id %in% c(0, 15:17, 31, 411:413, 42, 51, 61)) %>% mutate(status = 11) %>% select(status, id, value),
-  mort %>% filter(id %in% c(111:113, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 12) %>% select(status, id, value),
-  mort %>% filter(id %in% c(121:123, 131:133, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 13) %>% select(status, id, value),
-  mort %>% filter(id %in% c(141:143, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 14) %>% select(status, id, value),
-  mort %>% filter(id %in% c(21, 31, 411:413, 42, 61)) %>% mutate(status = 15) %>% select(status, id, value),
-  mort %>% filter(id %in% c(0, 15:17, 21, 31, 411:413, 42, 51, 61)) %>% mutate(status = 16) %>% select(status, id, value),
-  mort %>% filter(id %in% c(15:17, 21, 31, 411:413, 42, 61)) %>% mutate(status = 17) %>% select(status, id, value),
-  mort %>% filter(id %in% c(0, 15:17, 31, 411:413, 42, 51, 61)) %>% mutate(status = 21) %>% select(status, id, value),
-  mort %>% filter(id %in% c(111:113, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 22) %>% select(status, id, value),
-  mort %>% filter(id %in% c(121:123, 131:133, 15:17, 31, 411:413, 42, 61)) %>% mutate(status = 23) %>% select(status, id, value)
+mort.integrity <- bind_rows(
+  mort %>% filter(id %in% c(0, 15:17, 21, 31, 411:413, 42, 51, 61)) %>% mutate(integrity = 1) %>% select(integrity, id, value),
+  mort %>% filter(id %in% c(111:113, 15:17, 21, 31, 411:413, 42, 61)) %>% mutate(integrity = 2) %>% select(integrity, id, value),
+  mort %>% filter(id %in% c(121:123, 131:133, 15:17, 21, 31, 411:413, 42, 61)) %>% mutate(integrity = 3) %>% select(integrity, id, value),
+  mort %>% filter(id %in% c(121:123, 131:133, 15:17, 21, 31, 411:413, 42, 61, 71)) %>% mutate(integrity = 4) %>% select(integrity, id, value),
+  mort %>% filter(id %in% c(141:143, 15:17, 21, 31, 411:413, 42, 61)) %>% mutate(integrity = 5) %>% select(integrity, id, value)
 ) 
 
-# 1. 10. microsite --------------------------------------------------------
+# 1. 11. microsite --------------------------------------------------------
 
 microsite <- data.frame(id = c(1:47),
                         value = c(1:47))
 
-# 1. 11. yes / no ---------------------------------------------------------
+# 1. 12. yes / no ---------------------------------------------------------
 
 yes_no <- data.frame(id = c(0:1),
                      value = c("no", "yes"))
 
-# 1. 12. export -----------------------------------------------------------
+# 1. 13. export -----------------------------------------------------------
 
 lookups <- list("lookup_landform" = landform,
                 "lookup_hillform" = hillform,
                 "lookup_species" = species,
                 "lookup_status" = status,
+                "lookup_integrity" = integrity,
                 "lookup_growth" = growth,
                 "lookup_layer" = layer,
                 "lookup_decay" = decay,
                 "lookup_decayht" = decayht,
-                "lookup_c_mort" = mort.status,
+                "lookup_c_mort" = mort.integrity,
                 "lookup_microsite" = microsite,
                 "lookup_yes_no" = yes_no) 
 

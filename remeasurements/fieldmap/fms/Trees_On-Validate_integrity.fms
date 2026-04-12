@@ -1,0 +1,23 @@
+﻿begin
+
+  if (Trees['integrity'] <> NULL) and (Trees_old['integrity_old'] <> NULL) then begin
+  
+    if not(Trees['integrity'] in [5]) and (Trees_old['integrity_old'] in [5]) then begin
+      showwarning('Tree was uprooted in the previous census. Please double-check.');
+    end;
+  
+    if (Trees['integrity'] in [1, 2, 3]) and (Trees_old['integrity_old'] in [4]) then begin
+      showwarning('Tree was stump in the previous census. Please double-check.');
+    end;
+    
+    if (Trees['integrity'] in [1, 2]) and (Trees_old['integrity_old'] in [3]) then begin
+      showwarning('Tree had stem breakage in the previous census. Please double-check.');
+    end;
+    
+    if (Trees['integrity'] in [1]) and (Trees_old['integrity_old'] in [2]) then begin
+      showwarning('Tree had crown breakage in the previous census. Please double-check.');
+    end;
+    
+  end;
+
+end.
