@@ -417,16 +417,15 @@ paramsCalculate <- function(data, params){
                integrity %in% c(1:3),
                !decayht %in% 99,
                !species %in% "99",
-               (decay_wood %in% c(1:5) | decay %in% c(1:5))) %>%
+               !decay_wood %in% 99) %>%
         mutate(decayht = case_when(
           decayht %in% 0 ~ 5,
           decayht %in% 1 ~ 15,
           decayht %in% 2 ~ 25,
           decayht %in% 3 ~ 35,
           decayht %in% 4 ~ 45,
-          decayht %in% 5 ~ 55),
-          decay_class = ifelse(decay_wood %in% 99, round(0.2924953 + 0.7131269 * decay, 0), decay_wood)) %>%
-        left_join(., data$wood_density, by = c("species", "decay_class")) %>%
+          decayht %in% 5 ~ 55)) %>%
+        left_join(., data$wood_density, by = c("species", "decay_wood" = "decay_class")) %>%
         rowwise() %>%
         mutate(
           volume_snag = E_VOL_AB_HmDm_HT.f(
