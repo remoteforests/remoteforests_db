@@ -104,7 +104,7 @@ for (i in names(data.clean)){
     
     name <- paste(sampling.date, country, i, "clean", sep = "_")
   
-    }
+  }
   
   write.table(data.clean[[i]], paste0(path, name, ".csv"), sep = ",", row.names = F, na = "")
   

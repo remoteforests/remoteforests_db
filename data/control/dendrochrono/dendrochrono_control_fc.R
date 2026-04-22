@@ -52,7 +52,7 @@ read_ring_data <- function(file){
   #' @description read dendrochronological ring data (.fh)
   #' @param file path to the .fh file
   
-  ring <- read.fh(fh) %>%
+  ring <- read.fh(file) %>%
     rownames_to_column("year") %>%
     gather(., key = "treeid", value = "incr_mm", 2:ncol(.)) %>%
     filter(!is.na(incr_mm)) %>%
