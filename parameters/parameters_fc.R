@@ -333,6 +333,7 @@ paramsCalculate <- function(data, params){
       # maximal height ----------------------------------------------------------
       
       data.params$height_max <- data$tree %>% 
+        filter(status %in% 1) %>%
         group_by(plot_id) %>% 
         summarise(height_max = max(height_m, na.rm = T)) %>%
         mutate(height_max = ifelse(height_max %in% -Inf, NA, height_max),
