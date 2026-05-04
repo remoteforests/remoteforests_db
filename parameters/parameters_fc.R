@@ -29,9 +29,10 @@ paramsGetData <- function(plot.id, params){
                !onplot %in% c(0, 99),
                !species %in% "99") %>%
         inner_join(., tbl(KELuser, "plot"), by = c("plot_id" = "id")) %>%
-        select(plot_id, plotsize, dbh_min, treeid, species, dbh_mm, height_m, 
-               status, integrity, decay, decayht, decay_wood) %>%
         filter(dbh_mm >= dbh_min) %>%
+        inner_join(., tbl(KELuser, "species_fk"), by = c("species" = "id")) %>%
+        select(plot_id, plotsize, tree_id = id, species, bdat, dbh_mm, 
+               height_m, status, integrity, decay, decayht, decay_wood) %>%
         collect()
       
       data.list$wood_density <- tbl(KELuser, "wood_density") %>% select(-id) %>% collect()
@@ -279,12 +280,12 @@ paramsCalculate <- function(data, params){
                decay = ifelse(decay %in% 99, NA, decay)) %>%
         group_by(plot_id) %>%
         summarise(plotsize = first(plotsize),
-                  n_trees_live_100 = length(treeid[dbh_mm >= 100 & status %in% 1]),
-                  n_trees_live_500 = length(treeid[dbh_mm >= 500 & status %in% 1]),
-                  n_trees_live_700 = length(treeid[dbh_mm >= 700 & status %in% 1]),
-                  n_trees_dead_100 = length(treeid[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
-                  n_trees_dead_500 = length(treeid[dbh_mm >= 500 & status %in% 0 & integrity %in% c(1:3)]),
-                  n_trees_dead_700 = length(treeid[dbh_mm >= 700 & status %in% 0 & integrity %in% c(1:3)]),
+                  n_trees_live_100 = length(tree_id[dbh_mm >= 100 & status %in% 1]),
+                  n_trees_live_500 = length(tree_id[dbh_mm >= 500 & status %in% 1]),
+                  n_trees_live_700 = length(tree_id[dbh_mm >= 700 & status %in% 1]),
+                  n_trees_dead_100 = length(tree_id[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
+                  n_trees_dead_500 = length(tree_id[dbh_mm >= 500 & status %in% 0 & integrity %in% c(1:3)]),
+                  n_trees_dead_700 = length(tree_id[dbh_mm >= 700 & status %in% 0 & integrity %in% c(1:3)]),
                   ba_live_100 = sum(ba[dbh_mm >= 100 & status %in% 1]),
                   ba_live_100 = ifelse(ba_live_100 %in% 0, NA, ba_live_100),
                   ba_dead_100 = sum(ba[dbh_mm >= 100 & status %in% 0 & integrity %in% c(1:3)]),
@@ -381,62 +382,55 @@ paramsCalculate <- function(data, params){
       
       # volume and biomass of dead standing trees -------------------------------
       
-      data(SK.par.lme)
-      
-      data.params$volume_dead_standing <- data$tree %>%
-        filter(dbh_mm >= dbh_min,
-               status %in% 0,
+      dead.standing <- data$tree %>%
+        filter(status %in% 0,
                integrity %in% c(1:3),
                !decayht %in% 99) %>%
-        mutate(decayht = case_when(
-          decayht %in% 0 ~ 5,
-          decayht %in% 1 ~ 15,
-          decayht %in% 2 ~ 25,
-          decayht %in% 3 ~ 35,
-          decayht %in% 4 ~ 45,
-          decayht %in% 5 ~ 55)) %>%
-        rowwise() %>%
-        mutate(volume_snag = E_VOL_AB_HmDm_HT.f(
-          Hm = 1.3,
-          Dm = (dbh_mm * 0.1),
-          mHt = (log(dbh_mm * 0.1) - 1.08261)^2 / 0.275541,
-          sHt = 0,
-          A = 0,
-          B = decayht,
-          iDH = "H",
-          par.lme = SK.par.lme)$E_VOL) %>%
+        mutate(
+          decayht = case_when(
+            decayht %in% 0 ~ 5,
+            decayht %in% 1 ~ 15,
+            decayht %in% 2 ~ 25,
+            decayht %in% 3 ~ 35,
+            decayht %in% 4 ~ 45,
+            decayht %in% 5 ~ 55),
+          dbh_cm = dbh_mm * 0.1,
+          estht = estHeight(d13 = dbh_cm, sp = bdat),
+          decayht = ifelse(integrity %in% 1 | decayht > estht, estht, decayht),
+          volume_m3 = NA)
+      
+      for (ii in dead.standing$tree_id) {
+        
+        t <- tprTrees(spp = dead.standing$bdat[dead.standing$tree_id %in% ii],
+                      Dm = dead.standing$dbh_cm[dead.standing$tree_id %in% ii],
+                      Hm = 1.3,
+                      Ht = dead.standing$estht[dead.standing$tree_id %in% ii],
+                      sHt = 0,
+                      inv = 0)
+        
+        decayht <- dead.standing$decayht[dead.standing$tree_id %in% ii]
+        
+        dead.standing <- dead.standing %>%
+          mutate(volume_m3 = ifelse(tree_id %in% ii, 
+                                    tprVolume(obj = t,
+                                              AB = list(A = 0, B = decayht, sl = 1),
+                                              iAB = "H",
+                                              bark = T,
+                                              interval = "none",
+                                              mono = T),
+                                    volume_m3))
+      }  
+
+      data.params$volume_dead_standing <- dead.standing %>%
         group_by(plot_id) %>%
-        summarise(volume_dead_standing_100 = sum(volume_snag[dbh_mm >= 100]) * 10000 / first(plotsize),
+        summarise(volume_dead_standing_100 = sum(volume_m3[dbh_mm >= 100]) * 10000 / first(plotsize),
                   volume_dead_standing_100 = ifelse(volume_dead_standing_100 %in% 0, NA, volume_dead_standing_100)) %>%
         mutate_at(vars(-plot_id), list(~ round(., 0)))
       
-      data.params$biomass_dead_standing <- data$tree %>%
-        filter(dbh_mm >= dbh_min,
-               status %in% 0,
-               integrity %in% c(1:3),
-               !decayht %in% 99,
-               !species %in% "99",
-               !decay_wood %in% 99) %>%
-        mutate(decayht = case_when(
-          decayht %in% 0 ~ 5,
-          decayht %in% 1 ~ 15,
-          decayht %in% 2 ~ 25,
-          decayht %in% 3 ~ 35,
-          decayht %in% 4 ~ 45,
-          decayht %in% 5 ~ 55)) %>%
+      data.params$biomass_dead_standing <- dead.standing %>%
+        filter(!decay_wood %in% 99) %>%
         left_join(., data$wood_density, by = c("species", "decay_wood" = "decay_class")) %>%
-        rowwise() %>%
-        mutate(
-          volume_snag = E_VOL_AB_HmDm_HT.f(
-            Hm = 1.3,
-            Dm = (dbh_mm * 0.1),
-            mHt = (log(dbh_mm * 0.1) - 1.08261)^2 / 0.275541,
-            sHt = 0,
-            A = 0,
-            B = decayht,
-            iDH = "H",
-            par.lme = SK.par.lme)$E_VOL,
-          biomass = volume_snag * (density_gCm3 * relative_density * 1000)) %>%
+        mutate(biomass = volume_m3 * (density_gCm3 * relative_density * 1000)) %>%
         group_by(plot_id) %>%
         summarise(biomass_dead_standing_100 = sum(biomass[dbh_mm >= 100]) * 10000 / first(plotsize),
                   biomass_dead_standing_100 = ifelse(biomass_dead_standing_100 %in% 0, NA, biomass_dead_standing_100)) %>%
