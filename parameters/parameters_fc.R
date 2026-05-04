@@ -26,10 +26,12 @@ paramsGetData <- function(plot.id, params){
       
       data.list$tree <- tbl(KELuser, "tree") %>% 
         filter(plot_id %in% plot.id,
-               !onplot %in% c(0, 99)) %>%
+               !onplot %in% c(0, 99),
+               !species %in% "99") %>%
         inner_join(., tbl(KELuser, "plot"), by = c("plot_id" = "id")) %>%
         select(plot_id, plotsize, dbh_min, treeid, species, dbh_mm, height_m, 
                status, integrity, decay, decayht, decay_wood) %>%
+        filter(dbh_mm >= dbh_min) %>%
         collect()
       
       data.list$wood_density <- tbl(KELuser, "wood_density") %>% select(-id) %>% collect()
@@ -273,7 +275,6 @@ paramsCalculate <- function(data, params){
     if(i == "tree"){
         
       data.params$tree_params <- data$tree %>%
-        filter(dbh_mm >= dbh_min) %>%
         mutate(ba = pi * dbh_mm ^ 2 / 4 / 1000000,
                decay = ifelse(decay %in% 99, NA, decay)) %>%
         group_by(plot_id) %>%
@@ -342,8 +343,7 @@ paramsCalculate <- function(data, params){
       # dominant species --------------------------------------------------------
       
       data.params$dominant_species <- data$tree %>%
-        filter(dbh_mm >= dbh_min,
-               status %in% 1) %>%
+        filter(status %in% 1) %>%
         mutate(ba = pi * dbh_mm ^ 2 / 4 / 1000000) %>%
         group_by(plot_id, species) %>%
         summarise(ba = sum(ba) * 10000 / first(plotsize)) %>%
@@ -356,9 +356,7 @@ paramsCalculate <- function(data, params){
       # biomass and volume of live trees ---------------------------------------
         
       data.params$biomass_volume_live <- data$tree %>%
-        filter(dbh_mm >= dbh_min,
-               status %in% 1,
-               !species %in% "99") %>%
+        filter(status %in% 1) %>%
         left_join(., data$wood_density %>% distinct(., species, density_gCm3), by = "species") %>%
         left_join(., data$biomass_eq, by = "species") %>%
         rowwise() %>%
