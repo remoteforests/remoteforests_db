@@ -76,7 +76,8 @@ check_dendrochronological_data <- function(data, fk){
   
   error.list$C_not_in_tree <- anti_join(data$core, tree.db, by = c("date", "treeid"))
   error.list$C_not_in_ring <- anti_join(data$core, data$ring, by = c("date", "treeid"))
-  error.list$C_species <- anti_join(data$core, tree.db, by = c("date", "treeid", "species"))
+  error.list$C_species <- anti_join(data$core, tree.db, by = c("date", "treeid", "species")) %>%
+    left_join(., tree.db %>% select(date, treeid, species_db = species), by = c("date", "treeid"))
   error.list$C_corestatus <- data$core %>% filter(!corestatus %in% fk$corestatus_fk)
   error.list$C_crossdated <- data$core %>% filter(!crossdated %in% fk$crossdated_fk)
   error.list$C_missing_mm <- data$core %>% 
