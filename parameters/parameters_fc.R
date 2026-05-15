@@ -157,38 +157,51 @@ paramsGetData <- function(plot.id, params){
 
     if(i == "mortality"){
       
-      mort.plotid <- tbl(KELuser, "plot") %>% filter(id %in% plot.id) %>% distinct(., plotid) %>% pull()
-      
       data.list$mort_plot <- tbl(KELuser, "plot") %>%
-        filter(plotid %in% mort.plotid & !census %in% 8) %>%
-        group_by(plotid) %>% filter(n() > 1) %>% ungroup() %>%
-        select(plot_id = id, plotid, date, census, plottype, plotsize, dbh_min) %>%
+        filter(id %in% plot.id) %>%
+        distinct(., plotid) %>%
+        inner_join(., tbl(KELuser, "plot"), by = "plotid") %>%
+        filter(!census %in% 8,
+               plottype %in% c(3, 4)) %>%
+        group_by(plotid) %>% 
+        filter(n() > 1) %>% 
+        select(plot_id = id, plotid, date, plotsize, dbh_min) %>%
         collect() %>%
-        group_by(plotid) %>%
         arrange(date, .by_group = T) %>%
-        mutate(use = ifelse(census %in% c(5, 6, 7), 0, 1),
-               use = case_when(
-                 row_number() == 1 & lead(use, 1) %in% 0 ~ 0,
-                 row_number() == 2 & lead(use, 1) %in% 1 ~ 1,
-                 .default = use)) %>%
-        filter(plottype %in% c(3, 4),
-               use %in% 1) %>%
-        filter(n() > 1) %>%
-        mutate(plotsize = min(plotsize, na.rm = T),
+        mutate(int = date - lag(date, 1),
+               int = ifelse(min(int, na.rm = T) %in% 1 & date %in% 2017, -1, int),
+               int = ifelse(int %in% 1, 5, int)) %>%
+        filter(!int %in% c(-1, 2, 3)) %>%
+        mutate(int = date - lag(date, 1),
+               ncensus = row_number(),
+               plotsize = min(plotsize, na.rm = T),
                plotsize = case_when(
                  plotsize %in% 500 ~ 12.62,
                  plotsize %in% 1000 ~ 17.84,
                  plotsize %in% 1500 ~ 21.85),
-               dbh_min = max(dbh_min, na.rm = T), 
-               int = case_when(
-                 row_number() == 1 ~ NA_integer_,
-                 row_number() == 2 ~ date - lag(date, 1),
-                 row_number() == 3 & (date - lag(date, 1)) >= 4 ~ date - lag(date, 1),
-                 row_number() == 3 & (date - lag(date, 1)) < 4 ~ date - lag(date, 2)),
-               int = ifelse(int %in% NA, max(int, na.rm = T), int)) %>%
-        filter(int %in% c(4:10)) %>%
-        mutate(n = ifelse(row_number() == 3 & (date - lag(date, 1)) < 4, 2.5, row_number())) %>%
-        select(plot_id, date, plotid, plotsize, dbh_min, int, n)
+               dbh_min = max(dbh_min, na.rm = T)) %>%
+        ungroup()
+        
+      data.list$mort_tree <- tbl(KELuser, "tree") %>%
+        filter(plot_id %in% local(data.list$mort_plot$plot_id),
+               !is.na(x_m) & !is.na(y_m),
+               !status %in% 99) %>%
+        select(plot_id, treeid, treetype, x_m, y_m, status, dbh_mm) %>%
+        collect() %>%
+        inner_join(., data.list$mort_plot, by = "plot_id") %>%
+        mutate(distance_m = sqrt(abs(x_m^2) + abs(y_m^2))) %>%
+        filter(distance_m <= plotsize) %>%
+        group_by(treeid) %>%
+        arrange(date, .by_group = T) %>%
+        mutate(treetype = last(treetype)) %>%
+        filter(treetype %in% "0") %>%
+        mutate(dbh_mm = ifelse(is.na(dbh_mm), max(dbh_mm, na.rm = T), dbh_mm)) %>%
+        filter(status %in% 1) %>% 
+        mutate(dbh_threshold = ifelse(dbh_mm >= dbh_min, 1, 0),
+               dbh_threshold = min(dbh_threshold)) %>%
+        filter(dbh_threshold %in% 1) %>%
+        ungroup() %>%
+        select(plot_id, treeid)
     }
 
     # temperature -------------------------------------------------------------
@@ -659,106 +672,38 @@ paramsCalculate <- function(data, params){
 
     if(i == "mortality"){
                           
-      mort.plot.id <- data$mort_plot %>% pull(plot_id)
-                          
-      data.params$mortality <- tbl(KELuser, "tree") %>% 
-        filter(plot_id %in% mort.plot.id) %>%
-        inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, date), by = "plot_id") %>%
-        select(plot_id, date, treeid, treetype, onplot, x_m, y_m, census, status, dbh_mm) %>%
-        collect() %>%
-        group_by(treeid) %>%
-        arrange(desc(date), .by_group = T) %>%
-        mutate(treetype = first(treetype),
-               onplot = first(onplot[!onplot %in% 99]),
-               x_m = first(x_m[!is.na(x_m)]),
-               y_m = first(y_m[!is.na(y_m)]),
-               status = ifelse(status %in% 99, NA, status),
-               status = case_when(
-                 is.na(status) & lead(status, 1) %in% 0 ~ 0,
-                 is.na(status) & lag(status, 1) %in% 1 ~ 1,
-                 .default = status),
-               status = case_when(
-                 is.na(status) & lead(status, 1) %in% 0 ~ 0,
-                 is.na(status) & lag(status, 1) %in% 1 ~ 1,
-                 .default = status),
-               status = ifelse(row_number() == 2 & status %in% c(0, NA) & lag(status, 1) %in% 1, 1, status),
-               status = ifelse(row_number() == 3 & status %in% c(0, NA) & lag(status, 1) %in% 1, 1, status),
-               status_na = ifelse(is.na(status), 1, 0),
-               status_na = max(status_na, na.rm = T),
-               dbh_mm = case_when(
-                 is.na(dbh_mm) & row_number() == 1 ~ first(dbh_mm[!is.na(dbh_mm)]),
-                 is.na(dbh_mm) & row_number() == 2 ~ as.integer(round(mean(dbh_mm, na.rm = T), 0)),
-                 is.na(dbh_mm) & row_number() == 3 ~ last(dbh_mm[!is.na(dbh_mm)]),
-                 .default = dbh_mm)) %>%
-        filter(!status_na %in% 1,
-               !is.na(dbh_mm)) %>%
-        mutate(
-          dbh_mm = case_when(
-            row_number() == 2 & status %in% 0 & lag(status, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
-            row_number() == 2 & status %in% 1 & lag(status, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
-            .default = dbh_mm),
-          dbh_mm = case_when(
-            row_number() == 3 & status %in% 0 & lag(status, 1) %in% 0 & lag(dbh_mm, 1) > dbh_mm ~ lag(dbh_mm, 1),
-            row_number() == 3 & status %in% 1 & lag(status, 1) %in% 1 & lag(dbh_mm, 1) < dbh_mm ~ lag(dbh_mm, 1),
-            .default = dbh_mm)) %>%
-        filter(treetype %in% "0",
-               !onplot %in% c(0, NA),
-               status %in% 1) %>% 
-        inner_join(., data$mort_plot, by = c("plot_id", "date")) %>%
-        mutate(distance_m = sqrt(abs(x_m^2) + abs(y_m^2)),
-               dbh_threshold = ifelse(dbh_mm >= dbh_min, 1, 0),
-               dbh_threshold = min(dbh_threshold)) %>%
-        filter(dbh_threshold %in% 1,
-               distance_m <= plotsize) %>%
-        ungroup() %>%
-        do({
-                              
-          x <- .
-                              
-          bind_rows(
-            x %>% filter(n %in% c(1,2), census %in% 0) %>%
-              group_by(plot_id, date, plotid, int) %>%
-              summarise(n = n()) %>% 
-              group_by(plotid) %>%
-              filter(n() > 1) %>%
-              arrange(date, .by_group = T) %>%
-              mutate(mortality = ifelse(row_number() == 2, 1 - ((n/lag(n, 1))^(1/int)), NA),
-                     mortality = round(mortality * 100, 2)) %>%
-              ungroup() %>%
-              filter(!is.na(mortality) & plot_id %in% plot.id) %>%
-              select(plot_id, mortality),
-            x %>% filter(n %in% c(1,2,2.5)) %>%
-              group_by(treeid) %>%
-              mutate(census = max(census)) %>%
-              filter(census %in% 0,
-                     !n %in% 2) %>%
-              group_by(plot_id, date, plotid, int) %>%
-              summarise(n = n()) %>% 
-              group_by(plotid) %>%
-              filter(n() > 1) %>%
-              arrange(date, .by_group = T) %>%
-              mutate(mortality = ifelse(row_number() == 2, 1 - ((n/lag(n, 1))^(1/int)), NA),
-                     mortality = round(mortality * 100, 2)) %>%
-              ungroup() %>%
-              filter(!is.na(mortality) & plot_id %in% plot.id) %>%
-              select(plot_id, mortality),
-            x %>% filter(n %in% c(2,3)) %>%
-              group_by(treeid) %>%
-              arrange(desc(date), .by_group = T) %>%
-              mutate(census = first(census)) %>%
-              filter(census %in% 0) %>%
-              group_by(plot_id, date, plotid, int) %>%
-              summarise(n = n()) %>% 
-              group_by(plotid) %>%
-              filter(n() > 1) %>%
-              arrange(date, .by_group = T) %>%
-              mutate(mortality = ifelse(row_number() == 2, 1 - ((n/lag(n, 1))^(1/int)), NA),
-                     mortality = round(mortality * 100, 2)) %>%
-              ungroup() %>%
-              filter(!is.na(mortality) & plot_id %in% plot.id) %>%
-              select(plot_id, mortality)
-          )
-        })
+      data.params$mortality <- tibble()  
+        
+      for (ii in 2:max(data$mort_plot$ncensus)) {
+        
+        x <- data$mort_plot %>%
+          filter(ncensus %in% c(ii-1, ii)) %>%
+          group_by(plotid) %>%
+          filter(n() > 1) %>%
+          ungroup() %>%
+          inner_join(., data$mort_tree, by = "plot_id") %>%
+          group_by(treeid) %>%
+          filter(!(n() %in% 1 & ncensus %in% ii)) %>%
+          group_by(plot_id) %>%
+          summarise(n = n()) %>%
+          right_join(., data$mort_plot %>% 
+                       filter(ncensus %in% c(ii-1, ii)) %>%
+                       group_by(plotid) %>%
+                       filter(n() > 1) %>%
+                       ungroup(),
+                     by = "plot_id") %>%
+          mutate(n = ifelse(is.na(n), 0, n)) %>%
+          group_by(plotid) %>%
+          arrange(date, .by_group = T) %>%
+          mutate(int = int[ncensus %in% ii],
+                 mortality = ifelse(row_number() == 2, 1 - ((n/lag(n, 1))^(1/int)), NA),
+                 mortality = round(mortality * 100, 2)) %>%
+          ungroup() %>%
+          filter(!is.na(mortality) & plot_id %in% plot.id) %>%
+          select(plot_id, mortality)
+        
+        data.params$mortality <- bind_rows(data.params$mortality, x)
+      }
     }
     
     # temperature -------------------------------------------------------------
