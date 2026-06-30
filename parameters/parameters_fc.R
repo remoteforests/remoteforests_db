@@ -38,22 +38,6 @@ paramsGetData <- function(plot.id, params){
       data.list$wood_density <- tbl(KELuser, "wood_density") %>% select(-id) %>% collect()
       
       data.list$biomass_eq <- tbl(KELuser, "biomass_eq") %>% select(-id) %>% collect()
-      
-      data.list$recent_dist <-  tbl(KELuser, "tree") %>%
-        filter(plot_id %in% plot.id,
-               !(status %in% 0 & integrity %in% 4) & !status %in% 99,
-               growth %in% c(-1, 1),
-               treetype %in% "0",
-               onplot %in% c(1, 2),
-               !species %in% c("Lians", "99"),
-               decay %in% c(-1:3)) %>%
-        inner_join(., tbl(KELuser, "species_fk"), by = c("species" = "id")) %>%
-        inner_join(., tbl(KELuser, "dist_param") %>% select(sp_group_dist, dbhth = dbh_mm), by = "sp_group_dist") %>%
-        filter(dbh_mm >= dbhth) %>%
-        inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, plotid), by = "plot_id") %>%
-        inner_join(., tbl(KELuser, "spatial_hierarchy"), by = "plotid") %>%
-        select(plot_id, stand, subplot, plotid, sp_type, dbh_mm, decay) %>%
-        collect()
     }
     
     # core --------------------------------------------------------------------
@@ -95,6 +79,22 @@ paramsGetData <- function(plot.id, params){
         filter(plot_id %in% plot.id,
                type %in% "full") %>%
         select(plot_id, year, kde) %>%
+        collect()
+      
+      data.list$recent_dist <-  tbl(KELuser, "tree") %>%
+        filter(plot_id %in% plot.id,
+               !(status %in% 0 & integrity %in% 4) & !status %in% 99,
+               growth %in% c(-1, 1),
+               treetype %in% "0",
+               onplot %in% c(1, 2),
+               !species %in% c("Lians", "99"),
+               decay %in% c(-1:3)) %>%
+        inner_join(., tbl(KELuser, "species_fk"), by = c("species" = "id")) %>%
+        inner_join(., tbl(KELuser, "dist_param") %>% select(sp_group_dist, dbhth = dbh_mm), by = "sp_group_dist") %>%
+        filter(dbh_mm >= dbhth) %>%
+        inner_join(., tbl(KELuser, "plot") %>% select(plot_id = id, plotid), by = "plot_id") %>%
+        inner_join(., tbl(KELuser, "spatial_hierarchy"), by = "plotid") %>%
+        select(plot_id, stand, subplot, plotid, sp_type, dbh_mm, decay) %>%
         collect()
     }
     
@@ -448,31 +448,6 @@ paramsCalculate <- function(data, params){
         summarise(biomass_dead_standing_100 = sum(biomass[dbh_mm >= 100]) * 10000 / first(plotsize),
                   biomass_dead_standing_100 = ifelse(biomass_dead_standing_100 %in% 0, NA, biomass_dead_standing_100)) %>%
         mutate_at(vars(-plot_id), list(~ round(., 0)))
-      
-      # recent disturbance ------------------------------------------------------
-      
-      data.ca <- tbl(KELuser, "dist_data_ca") %>% select(stand, subplot, plotid, sp_type, dbh_mm, ca_m2) %>% collect()
-      
-      data.conif <- data.ca %>% filter(sp_type %in% "coniferous")
-        
-      conif <- lmer(sqrt(ca_m2) ~ dbh_mm + (1|stand) + (1|subplot) + (1|plotid), data = data.conif)
-        
-      data.broad <- data.ca %>% filter(sp_type %in% "broadleaved")
-        
-      broad <- lmer(sqrt(ca_m2) ~ dbh_mm + (1|stand) + (1|subplot) + (1|plotid), data = data.broad)
-        
-      data.params$disturbance_recent <- data$recent_dist %>%
-        mutate(ca_m2 = case_when(
-                 sp_type %in% "broadleaved" ~ predict(object = broad, newdata = ., allow.new.levels = T),
-                 sp_type %in% "coniferous" ~  predict(object = conif, newdata = ., allow.new.levels = T)),
-               ca_m2 = ca_m2^2) %>%
-        group_by(plot_id) %>%
-        summarise(ca_dist = sum(ca_m2[decay %in% c(1:3)]),
-                  ca_total = sum(ca_m2[decay %in% c(-1:3)])) %>%
-        mutate(disturbance_recent = ca_dist * 100 / ca_total,
-               disturbance_recent = ifelse(disturbance_recent %in% c(0,"NaN"), NA, disturbance_recent),
-               disturbance_recent = round(disturbance_recent, 0)) %>%
-        select(plot_id, disturbance_recent)
     }
 
     # core --------------------------------------------------------------------
@@ -551,6 +526,31 @@ paramsCalculate <- function(data, params){
         mutate(disturbance_index = diversity(.[ ,c(2:ncol(.))]),
                disturbance_index = round(disturbance_index, 2)) %>%
         select(plot_id, disturbance_index)
+      
+      # recent disturbance ------------------------------------------------------
+      
+      data.ca <- tbl(KELuser, "dist_data_ca") %>% select(stand, subplot, plotid, sp_type, dbh_mm, ca_m2) %>% collect()
+      
+      data.conif <- data.ca %>% filter(sp_type %in% "coniferous")
+      
+      conif <- lmer(sqrt(ca_m2) ~ dbh_mm + (1|stand) + (1|subplot) + (1|plotid), data = data.conif)
+      
+      data.broad <- data.ca %>% filter(sp_type %in% "broadleaved")
+      
+      broad <- lmer(sqrt(ca_m2) ~ dbh_mm + (1|stand) + (1|subplot) + (1|plotid), data = data.broad)
+      
+      data.params$disturbance_recent <- data$recent_dist %>%
+        mutate(ca_m2 = case_when(
+          sp_type %in% "broadleaved" ~ predict(object = broad, newdata = ., allow.new.levels = T),
+          sp_type %in% "coniferous" ~  predict(object = conif, newdata = ., allow.new.levels = T)),
+          ca_m2 = ca_m2^2) %>%
+        group_by(plot_id) %>%
+        summarise(ca_dist = sum(ca_m2[decay %in% c(1:3)]),
+                  ca_total = sum(ca_m2[decay %in% c(-1:3)])) %>%
+        mutate(disturbance_recent = ca_dist * 100 / ca_total,
+               disturbance_recent = ifelse(disturbance_recent %in% c(0,"NaN"), NA, disturbance_recent),
+               disturbance_recent = round(disturbance_recent, 0)) %>%
+        select(plot_id, disturbance_recent)
     }
 
     # deadwood ----------------------------------------------------------------
