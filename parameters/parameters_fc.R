@@ -104,7 +104,7 @@ paramsGetData <- function(plot.id, params){
       
       data.list$deadwood <- tbl(KELuser, "deadwood") %>% 
         inner_join(., tbl(KELuser, "plot") %>% filter(id %in% plot.id), by = c("plot_id" = "id")) %>%
-        filter((date < 2014 & dbh_mm >= 100) | (date >= 2014 & dbh_mm >= 60)) %>%
+        filter(dbh_mm >= dbh_min) %>%
         select(plot_id, transect_length_m, species, dbh_mm, decay) %>%
         collect()
       
