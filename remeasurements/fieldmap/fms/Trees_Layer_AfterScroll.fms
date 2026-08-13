@@ -1,3 +1,0 @@
-begin
-  Trees.PerformOnChangeScript('status');
-end.

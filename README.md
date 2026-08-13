@@ -1,9 +1,4 @@
-# remoteforests_db
 
-Repository related to the Data-Base
-- schema
-- upload scripts
-- download scripts
+# Remoteforests Database
 
-
-Eventually we would like to wrap everything into the package for easier use and higher convinience.
+This is the main repository for the REMOTEFORESTS database, containing the database documentation and scripts for its administration.
